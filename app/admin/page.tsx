@@ -12,7 +12,8 @@ const SESSION_KEY = "admin_authenticated";
 
 // Inner component that uses real-time data
 function AdminDashboard() {
-  const { items, refresh } = useRealTime();
+  // ✅ Added `pledges` to the destructuring
+  const { items, pledges, refresh } = useRealTime();
   const [editMode, setEditMode] = useState(false);
   const [editedItems, setEditedItems] = useState<{ [key: string]: number }>({});
   const [saving, setSaving] = useState(false);
@@ -24,6 +25,43 @@ function AdminDashboard() {
   const [newItemRequired, setNewItemRequired] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("kg");
   const [addingItem, setAddingItem] = useState(false);
+
+  // ✅ CSV Export Function
+  const downloadPledgesAsCSV = () => {
+    if (!pledges || pledges.length === 0) {
+      setMessage("No pledges to export.");
+      setTimeout(() => setMessage(""), 2000);
+      return;
+    }
+
+    const headers = ["Member Name", "Phone", "Date", "Items (item: quantity)"];
+    const rows = pledges.map((pledge) => [
+      pledge.memberName,
+      pledge.phone,
+      new Date(pledge.timestamp).toLocaleString(),
+      Object.entries(pledge.items)
+        .filter(([, qty]) => qty > 0)
+        .map(([item, qty]) => `${item}: ${qty}`)
+        .join(", "),
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute("download", `pledges_${new Date().toISOString().slice(0, 19)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setMessage("✅ Pledges exported successfully!");
+    setTimeout(() => setMessage(""), 2000);
+  };
 
   const handleEditClick = () => {
     if (!items) return;
@@ -194,8 +232,18 @@ function AdminDashboard() {
       )}
 
       <ItemSummaryCards />
+
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">All Pledges</h2>
+        {/* ✅ Added download button next to the title */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">All Pledges</h2>
+          <button
+            onClick={downloadPledgesAsCSV}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1"
+          >
+            📥 Download CSV
+          </button>
+        </div>
         <AdminPledgeTable />
       </div>
 
@@ -208,7 +256,7 @@ function AdminDashboard() {
   );
 }
 
-// Login & wrapper – same as before (unchanged)
+// Login & wrapper (unchanged)
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
