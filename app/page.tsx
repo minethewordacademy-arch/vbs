@@ -1,3 +1,4 @@
+//main page of the application, responsible for rendering the pledge form and summary cards, and providing campaign-specific metadata for SEO and social sharing.
 import { RealTimeProvider } from "./components/RealTimeProvider";
 import PledgeForm from "./components/PledgeForm";
 import PledgeWidget from "./components/PledgeWidget";   // <-- added
