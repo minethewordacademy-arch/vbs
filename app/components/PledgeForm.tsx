@@ -13,6 +13,8 @@ export default function PledgeForm() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showOnlyPledged, setShowOnlyPledged] = useState(false);
 
   const getRemaining = (itemName: string): number => {
     if (!items) return 0;
@@ -28,7 +30,6 @@ export default function PledgeForm() {
     setSelectedItems((prev) => ({ ...prev, [itemName]: qty }));
   };
 
-  // Called when user clicks "Submit" – shows modal instead of direct submit
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!memberName.trim() || !phone.trim()) {
@@ -40,7 +41,6 @@ export default function PledgeForm() {
       setMessage("Please pledge at least one item.");
       return;
     }
-    // Show confirmation modal
     setShowConfirmModal(true);
   };
 
@@ -50,7 +50,6 @@ export default function PledgeForm() {
     setMessage("");
 
     try {
-      // 1. Save pledge record
       const pledgeData = {
         memberName: memberName.trim(),
         phone: phone.trim(),
@@ -60,7 +59,6 @@ export default function PledgeForm() {
       const pledgesRef = ref(database, "pledges");
       await push(pledgesRef, pledgeData);
 
-      // 2. Update pledged totals using transactions
       await Promise.all(
         Object.entries(selectedItems).map(async ([itemName, qty]) => {
           if (qty <= 0) return;
@@ -75,6 +73,8 @@ export default function PledgeForm() {
       setMemberName("");
       setPhone("");
       setSelectedItems({});
+      setSearchTerm("");
+      setShowOnlyPledged(false);
     } catch (error) {
       console.error(error);
       setMessage("❌ Error submitting pledge. Please try again.");
@@ -84,6 +84,20 @@ export default function PledgeForm() {
   };
 
   if (!items) return <div className="text-center py-10">Loading...</div>;
+
+  // Filter items
+  const filteredItems = Object.entries(items).filter(([name]) => {
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (showOnlyPledged) {
+      const pledgedTotal = pledges.reduce(
+        (sum, p) => sum + (p.items[name] || 0),
+        0
+      );
+      return pledgedTotal > 0;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -121,11 +135,32 @@ export default function PledgeForm() {
           />
         </div>
 
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Items to Pledge
+        <div className="flex flex-wrap gap-3 items-center justify-between">
+          <div className="flex-1 min-w-37.5">
+            <input
+              type="text"
+              placeholder="🔍 Search items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showOnlyPledged}
+              onChange={(e) => setShowOnlyPledged(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            Show only items with pledges
           </label>
-          {Object.entries(items).map(([name, config]) => {
+        </div>
+
+        <div className="space-y-3 max-h-100 overflow-y-auto pr-2">
+          {filteredItems.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No items match your search.</p>
+          )}
+          {filteredItems.map(([name, config]) => {
             const remaining = getRemaining(name);
             const pledgedTotal = pledges.reduce(
               (sum, p) => sum + (p.items[name] || 0),
@@ -178,7 +213,6 @@ export default function PledgeForm() {
         </button>
       </form>
 
-      {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
