@@ -4,17 +4,23 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
-  // Initialize state directly from localStorage + system preference
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    const saved = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (saved) return saved;
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return systemPrefersDark ? "dark" : "light";
-  });
+  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  // Apply theme to <html> and save to localStorage whenever `theme` changes
+  // After mount, read saved theme or system preference
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    const saved = localStorage.getItem("theme") as "light" | "dark" | null;
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initial = saved ?? (systemPrefersDark ? "dark" : "light");
+    setTheme(initial);
+    document.documentElement.classList.toggle("dark", initial === "dark");
+  }, []);
+
+  // Apply theme changes after mount
+  useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
@@ -22,11 +28,14 @@ export default function ThemeToggle() {
       root.classList.remove("dark");
     }
     localStorage.setItem("theme", theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === "light" ? "dark" : "light"));
   };
+
+  // Don't render anything on the server to avoid hydration mismatch
+  if (!mounted) return null;
 
   return (
     <button
@@ -35,10 +44,9 @@ export default function ThemeToggle() {
       aria-label="Toggle dark mode"
     >
       {theme === "light" ? (
-        // Moon emoji (no external icons)
-        <span className="text-2xl" role="img" aria-label="Dark mode">🌙</span>
-      ) : (
         <span className="text-2xl" role="img" aria-label="Light mode">☀️</span>
+      ) : (
+        <span className="text-2xl" role="img" aria-label="Dark mode">🌙</span>
       )}
     </button>
   );
