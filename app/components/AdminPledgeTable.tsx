@@ -1,4 +1,3 @@
-//AdminPledgeTable.tsx
 "use client";
 
 import { useState } from "react";
@@ -7,10 +6,13 @@ import { database } from "@/app/lib/firebase";
 import { ref, remove } from "firebase/database";
 
 export default function AdminPledgeTable() {
-  const { pledges } = useRealTime();
+  const { pledges, items } = useRealTime(); // also get items for unit prices
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const formatMoney = (value: number) =>
+    `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
 
   const handleDeleteClick = (id: string) => {
     setPendingDeleteId(id);
@@ -39,6 +41,15 @@ export default function AdminPledgeTable() {
 
   if (!pledges.length) return <p className="text-gray-500">No pledges yet.</p>;
 
+  // Helper to compute total pledge value
+  const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
+    if (!items) return 0;
+    return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
+      const unitPrice = items[itemName]?.unitPrice || 0;
+      return total + qty * unitPrice;
+    }, 0);
+  };
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -47,36 +58,51 @@ export default function AdminPledgeTable() {
             <tr>
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
-              <th className="px-4 py-2 text-left">Items (qty)</th>
+              <th className="px-4 py-2 text-left">Items (qty × unit price)</th>
+              <th className="px-4 py-2 text-left">Total (KES)</th>
               <th className="px-4 py-2 text-left">Date</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
-            {pledges.map((pledge) => (
-              <tr key={pledge.id} className="border-t dark:border-gray-700">
-                <td className="px-4 py-2">{pledge.memberName}</td>
-                <td className="px-4 py-2">{pledge.phone}</td>
-                <td className="px-4 py-2">
-                  {Object.entries(pledge.items)
-                    .filter(([, qty]) => qty > 0)
-                    .map(([item, qty]) => `${item}: ${qty}`)
-                    .join(", ")}
-                </td>
-                <td className="px-4 py-2">
-                  {new Date(pledge.timestamp).toLocaleString()}
-                </td>
-                <td className="px-4 py-2">
-                  <button
-                    onClick={() => pledge.id && handleDeleteClick(pledge.id)}
-                    className="text-red-600 hover:text-red-800"
-                    aria-label="Delete pledge"
-                  >
-                    🗑️
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {pledges.map((pledge) => {
+              const totalValue = computePledgeTotal(pledge.items);
+              return (
+                <tr key={pledge.id} className="border-t dark:border-gray-700">
+                  <td className="px-4 py-2">{pledge.memberName}</td>
+                  <td className="px-4 py-2">{pledge.phone}</td>
+                  <td className="px-4 py-2">
+                    {Object.entries(pledge.items)
+                      .filter(([, qty]) => qty > 0)
+                      .map(([itemName, qty]) => {
+                        const unitPrice = items?.[itemName]?.unitPrice || 0;
+                        const subtotal = qty * unitPrice;
+                        return (
+                          <div key={itemName} className="text-sm">
+                            {itemName}: {qty} × {formatMoney(unitPrice)} ={" "}
+                            <span className="font-medium">{formatMoney(subtotal)}</span>
+                          </div>
+                        );
+                      })}
+                  </td>
+                  <td className="px-4 py-2 font-bold text-green-600">
+                    {formatMoney(totalValue)}
+                  </td>
+                  <td className="px-4 py-2">
+                    {new Date(pledge.timestamp).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2">
+                    <button
+                      onClick={() => pledge.id && handleDeleteClick(pledge.id)}
+                      className="text-red-600 hover:text-red-800"
+                      aria-label="Delete pledge"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
