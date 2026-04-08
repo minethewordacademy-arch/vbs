@@ -1,4 +1,4 @@
-//ItemSummaryCards.tsx
+// ItemSummaryCards.tsx
 "use client";
 
 import { useRealTime } from "./RealTimeProvider";
@@ -7,7 +7,7 @@ export default function ItemSummaryCards() {
   const { items, pledges } = useRealTime();
   if (!items) return null;
 
-  // Compute pledged totals from pledges (in case items.pledged is out of sync)
+  // Compute pledged totals from pledges
   const pledgedTotals: { [key: string]: number } = {};
   pledges.forEach((pledge) => {
     Object.entries(pledge.items).forEach(([item, qty]) => {
@@ -15,12 +15,19 @@ export default function ItemSummaryCards() {
     });
   });
 
+  // Format currency
+  const formatMoney = (value: number) =>
+    `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       {Object.entries(items).map(([name, config]) => {
         const pledged = pledgedTotals[name] || 0;
         const remaining = config.required - pledged;
         const percent = (pledged / config.required) * 100;
+        const unitPrice = config.unitPrice || 0;
+        const totalValue = config.required * unitPrice;
+
         return (
           <div key={name} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <h3 className="text-xl font-bold capitalize mb-2">{name}</h3>
@@ -28,6 +35,14 @@ export default function ItemSummaryCards() {
               <div className="flex justify-between">
                 <span>Required:</span>
                 <span className="font-semibold">{config.required} {config.unit}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Unit Price:</span>
+                <span className="font-semibold text-blue-600">{formatMoney(unitPrice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Value:</span>
+                <span className="font-semibold text-purple-600">{formatMoney(totalValue)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Pledged:</span>

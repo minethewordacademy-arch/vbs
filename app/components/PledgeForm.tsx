@@ -16,6 +16,9 @@ export default function PledgeForm() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyPledged, setShowOnlyPledged] = useState(false);
 
+  const formatMoney = (value: number) =>
+    `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
+
   const getRemaining = (itemName: string): number => {
     if (!items) return 0;
     const pledgedTotal = pledges.reduce(
@@ -172,6 +175,8 @@ export default function PledgeForm() {
               0
             );
             const percentFilled = (pledgedTotal / config.required) * 100;
+            const unitPrice = config.unitPrice || 0;
+            const totalValue = config.required * unitPrice;
             return (
               <div
                 key={name}
@@ -189,7 +194,11 @@ export default function PledgeForm() {
                   <span>📦 Pledged: {pledgedTotal} {config.unit}</span>
                   <span>🎯 Remaining: {Math.max(remaining, 0)} {config.unit}</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-3">
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>💰 Unit price: {formatMoney(unitPrice)}</span>
+                  <span>💵 Total value: {formatMoney(totalValue)}</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 my-2">
                   <div
                     className="bg-linear-to-r from-blue-500 to-purple-500 h-2.5 rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(percentFilled, 100)}%` }}

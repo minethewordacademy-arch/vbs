@@ -14,7 +14,9 @@ const SESSION_KEY = "admin_authenticated";
 function AdminDashboard() {
   const { items, pledges, refresh } = useRealTime();
   const [editMode, setEditMode] = useState(false);
-  const [editedItems, setEditedItems] = useState<{ [key: string]: number }>({});
+  const [editedItems, setEditedItems] = useState<{
+    [key: string]: { required: number; unitPrice: number };
+  }>({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -23,13 +25,17 @@ function AdminDashboard() {
   const [newItemName, setNewItemName] = useState("");
   const [newItemRequired, setNewItemRequired] = useState("");
   const [newItemUnit, setNewItemUnit] = useState("kg");
+  const [newItemPrice, setNewItemPrice] = useState("");
   const [addingItem, setAddingItem] = useState(false);
 
   // Confirmation modal states
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
   const [showDeleteItemModal, setShowDeleteItemModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ name: string; key: string } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{
+    name: string;
+    key: string;
+  } | null>(null);
   const [deletingItem, setDeletingItem] = useState(false);
 
   // CSV Export Function
@@ -52,14 +58,19 @@ function AdminDashboard() {
     ]);
 
     const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      )
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute("download", `pledges_${new Date().toISOString().slice(0, 19)}.csv`);
+    link.setAttribute(
+      "download",
+      `pledges_${new Date().toISOString().slice(0, 19)}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -69,10 +80,54 @@ function AdminDashboard() {
     setTimeout(() => setMessage(""), 2000);
   };
 
+  // Seed PDF data (optional button)
+  const seedFromPDF = async () => {
+    const pdfItems = {
+      rice: { required: 150, unit: "Kgs", unitPrice: 180 },
+      lentils: { required: 30, unit: "Kgs", unitPrice: 240 },
+      beans: { required: 20, unit: "Kgs", unitPrice: 180 },
+      maize_flour: { required: 20, unit: "Kgs", unitPrice: 100 },
+      dengu: { required: 15, unit: "Kgs", unitPrice: 180 },
+      chapati_flour: { required: 12, unit: "Kgs", unitPrice: 100 },
+      eggs: { required: 5, unit: "Trays", unitPrice: 420 },
+      vegetables: { required: 1, unit: "Lot", unitPrice: 1000 },
+      bread: { required: 120, unit: "Loaves", unitPrice: 60 },
+      milk: { required: 200, unit: "Packets", unitPrice: 60 },
+      uji_flour: { required: 5, unit: "Kgs", unitPrice: 100 },
+      mandazi: { required: 30, unit: "Kgs", unitPrice: 100 },
+      sugar: { required: 5, unit: "Kgs", unitPrice: 150 },
+      chocolate: { required: 1, unit: "lot", unitPrice: 400 },
+      cooking_oil: { required: 20, unit: "Litres", unitPrice: 300 },
+      nyanya: { required: 1, unit: "Lot", unitPrice: 1000 },
+      onions: { required: 1, unit: "Lot", unitPrice: 500 },
+      additives: { required: 1, unit: "Lot", unitPrice: 500 },
+      cabbage: { required: 1, unit: "Lot", unitPrice: 500 },
+      melon: { required: 1, unit: "Lot", unitPrice: 1500 },
+      ndizi: { required: 1, unit: "Lot", unitPrice: 800 },
+      charcoal: { required: 1, unit: "Sack", unitPrice: 3000 },
+      gas: { required: 1, unit: "Lot", unitPrice: 2400 },
+      utensils_cleaning: { required: 1, unit: "Lot", unitPrice: 6000 },
+      catering_labour: { required: 1, unit: "Lot", unitPrice: 10000 },
+    };
+    const updates: Record<
+      string,
+      { required: number; unit: string; unitPrice: number; pledged: number }
+    > = {};
+    for (const [key, val] of Object.entries(pdfItems)) {
+      updates[`items/${key}`] = { ...val, pledged: 0 };
+    }
+    await update(ref(database), updates);
+    setMessage("✅ PDF data seeded!");
+    refresh();
+  };
+
   const handleEditClick = () => {
     if (!items) return;
     const current = Object.fromEntries(
-      Object.entries(items).map(([k, v]) => [k, v.required])
+      Object.entries(items).map(([k, v]) => [
+        k,
+        { required: v.required, unitPrice: v.unitPrice || 0 },
+      ]),
     );
     setEditedItems(current);
     setEditMode(true);
@@ -80,19 +135,34 @@ function AdminDashboard() {
 
   const handleRequiredChange = (itemName: string, value: string) => {
     const num = parseInt(value) || 0;
-    setEditedItems((prev) => ({ ...prev, [itemName]: num }));
+    setEditedItems((prev) => ({
+      ...prev,
+      [itemName]: { ...prev[itemName], required: num },
+    }));
+  };
+
+  const handlePriceChange = (itemName: string, value: string) => {
+    const num = parseFloat(value) || 0;
+    setEditedItems((prev) => ({
+      ...prev,
+      [itemName]: { ...prev[itemName], unitPrice: num },
+    }));
   };
 
   const saveRequiredQuantities = async () => {
     setSaving(true);
     setMessage("");
     try {
-      const updates: Record<string, number> = {};
-      for (const [itemName, newRequired] of Object.entries(editedItems)) {
-        updates[`items/${itemName}/required`] = newRequired;
+      const requiredUpdates: Record<string, number> = {};
+      const priceUpdates: Record<string, number> = {};
+      for (const [itemName, { required, unitPrice }] of Object.entries(
+        editedItems,
+      )) {
+        requiredUpdates[`items/${itemName}/required`] = required;
+        priceUpdates[`items/${itemName}/unitPrice`] = unitPrice;
       }
-      await update(ref(database), updates);
-      setMessage("✅ Required quantities updated.");
+      await update(ref(database), { ...requiredUpdates, ...priceUpdates });
+      setMessage("✅ Required quantities and prices updated.");
       setEditMode(false);
       refresh();
     } catch (error) {
@@ -109,6 +179,7 @@ function AdminDashboard() {
     try {
       const itemKey = newItemName.trim().toLowerCase().replace(/\s+/g, "_");
       const requiredNum = parseInt(newItemRequired) || 0;
+      const priceNum = parseFloat(newItemPrice) || 0;
       const itemRef = ref(database, `items/${itemKey}`);
       const snapshot = await get(itemRef);
       if (snapshot.exists()) {
@@ -121,11 +192,15 @@ function AdminDashboard() {
         required: requiredNum,
         unit: newItemUnit,
         pledged: 0,
+        unitPrice: priceNum,
       });
-      setMessage(`✅ Added "${newItemName}" (${requiredNum} ${newItemUnit}).`);
+      setMessage(
+        `✅ Added "${newItemName}" (${requiredNum} ${newItemUnit} @ KES ${priceNum}).`,
+      );
       setNewItemName("");
       setNewItemRequired("");
       setNewItemUnit("kg");
+      setNewItemPrice("");
       setShowAddItem(false);
       refresh();
     } catch (error) {
@@ -149,12 +224,16 @@ function AdminDashboard() {
     try {
       const itemKey = itemToDelete.key;
       // Check if any pledge contains this item
-      const hasPledges = pledges.some(pledge => 
-        Object.keys(pledge.items).includes(itemKey)
+      const hasPledges = pledges.some((pledge) =>
+        Object.keys(pledge.items).includes(itemKey),
       );
       if (hasPledges) {
         // Ask for extra confirmation because pledges exist
-        if (!window.confirm(`⚠️ Warning: This item has existing pledges. Deleting it will remove the item from all those pledges. Continue?`)) {
+        if (
+          !window.confirm(
+            `⚠️ Warning: This item has existing pledges. Deleting it will remove the item from all those pledges. Continue?`,
+          )
+        ) {
           setShowDeleteItemModal(false);
           setDeletingItem(false);
           return;
@@ -215,12 +294,18 @@ function AdminDashboard() {
           >
             + Add New Item
           </button>
+          <button
+            onClick={seedFromPDF}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm"
+          >
+            📦 Seed PDF Data
+          </button>
           {!editMode ? (
             <button
               onClick={handleEditClick}
               className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-sm"
             >
-              Edit Required
+              Edit Required & Prices
             </button>
           ) : (
             <>
@@ -246,7 +331,7 @@ function AdminDashboard() {
       {showAddItem && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow">
           <h3 className="font-semibold mb-3">Add New Item</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             <input
               type="text"
               placeholder="Item name (e.g., Maize Flour)"
@@ -272,6 +357,14 @@ function AdminDashboard() {
               <option value="pieces">pieces</option>
               <option value="bags">bags</option>
             </select>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Unit price (KES)"
+              value={newItemPrice}
+              onChange={(e) => setNewItemPrice(e.target.value)}
+              className="border rounded px-2 py-1 dark:bg-gray-700"
+            />
             <button
               onClick={openAddConfirm}
               disabled={addingItem}
@@ -290,11 +383,19 @@ function AdminDashboard() {
               <label className="w-28 font-semibold capitalize">{name}</label>
               <input
                 type="number"
-                value={editedItems[name]}
+                value={editedItems[name]?.required ?? config.required}
                 onChange={(e) => handleRequiredChange(name, e.target.value)}
                 className="border rounded px-2 py-1 w-28 dark:bg-gray-700"
               />
               <span className="text-sm text-gray-500">{config.unit}</span>
+              <input
+                type="number"
+                step="0.01"
+                value={editedItems[name]?.unitPrice ?? config.unitPrice ?? 0}
+                onChange={(e) => handlePriceChange(name, e.target.value)}
+                placeholder="Unit price (KES)"
+                className="border rounded px-2 py-1 w-32 dark:bg-gray-700"
+              />
               <button
                 onClick={() => handleDeleteItemClick(name, name)}
                 className="ml-auto text-red-600 hover:text-red-800"
@@ -334,8 +435,9 @@ function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Confirm Changes</h3>
             <p className="mb-6">
-              Are you sure you want to update the required quantities for all items?
-              This action cannot be undone immediately (you can edit again).
+              Are you sure you want to update the required quantities and prices
+              for all items? This action cannot be undone immediately (you can
+              edit again).
             </p>
             <div className="flex gap-3">
               <button
@@ -362,8 +464,15 @@ function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Confirm New Item</h3>
             <div className="space-y-2 mb-6">
-              <p><strong>Name:</strong> {newItemName}</p>
-              <p><strong>Required:</strong> {newItemRequired} {newItemUnit}</p>
+              <p>
+                <strong>Name:</strong> {newItemName}
+              </p>
+              <p>
+                <strong>Required:</strong> {newItemRequired} {newItemUnit}
+              </p>
+              <p>
+                <strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}
+              </p>
             </div>
             <div className="flex gap-3">
               <button
@@ -390,11 +499,13 @@ function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Delete Item</h3>
             <p className="mb-2">
-              Are you sure you want to delete <strong>“{itemToDelete.name}”</strong>?
+              Are you sure you want to delete{" "}
+              <strong>“{itemToDelete.name}”</strong>?
             </p>
-            {pledges.some(p => p.items[itemToDelete.key]) && (
+            {pledges.some((p) => p.items[itemToDelete.key]) && (
               <p className="text-red-600 text-sm mb-4">
-                ⚠️ This item has existing pledges. Deleting it will remove the item from all those pledges.
+                ⚠️ This item has existing pledges. Deleting it will remove the
+                item from all those pledges.
               </p>
             )}
             <div className="flex gap-3 mt-4">
@@ -462,7 +573,9 @@ export default function AdminClient() {
               className="w-full border rounded px-3 py-2 mb-4 dark:bg-gray-700"
               autoFocus
             />
-            {authError && <p className="text-red-600 text-sm mb-4">{authError}</p>}
+            {authError && (
+              <p className="text-red-600 text-sm mb-4">{authError}</p>
+            )}
             <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded">
               Login
             </button>
