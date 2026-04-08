@@ -441,7 +441,7 @@ export default function PledgeForm() {
 
                 {isFullyPledged ? (
                   <div className="text-center text-sm font-semibold text-green-600 bg-green-50 dark:bg-green-900/30 p-2 rounded-lg">
-                    ✅ Fully pledged! Thank you.
+                    ✅ Fully pledged! Thank you. Pick another item kindly
                   </div>
                 ) : (
                   <>
