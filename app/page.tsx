@@ -1,6 +1,5 @@
 import { RealTimeProvider } from "./components/RealTimeProvider";
 import PledgeForm from "./components/PledgeForm";
-import PledgeWidget from "./components/PledgeWidget";
 import { Metadata } from "next";
 
 type CampaignInfo = {
@@ -95,7 +94,6 @@ export default async function HomePage({
         <RealTimeProvider>
           <PledgeForm />
           <div className="mt-8">
-            <PledgeWidget />
           </div>
         </RealTimeProvider>
       </div>
