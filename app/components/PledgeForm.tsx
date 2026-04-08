@@ -16,11 +16,19 @@ export default function PledgeForm() {
     [key: string]: "quantity" | "cash";
   }>({});
   const [cashValues, setCashValues] = useState<{ [key: string]: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyPledged, setShowOnlyPledged] = useState(false);
+  const [exceedModal, setExceedModal] = useState<{
+    itemName: string;
+    remaining: number;
+    unit: string;
+  } | null>(null);
 
   const formatMoney = (value: number) =>
     `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
@@ -31,7 +39,7 @@ export default function PledgeForm() {
       (sum, p) => sum + (p.items[itemName] || 0),
       0,
     );
-    return items[itemName].required - pledgedTotal;
+    return Math.max(0, items[itemName].required - pledgedTotal);
   };
 
   const getRemainingCash = (itemName: string): number => {
@@ -39,6 +47,23 @@ export default function PledgeForm() {
     const remainingQty = getRemaining(itemName);
     const unitPrice = items[itemName].unitPrice || 0;
     return remainingQty * unitPrice;
+  };
+
+  const validateQuantity = (itemName: string, qty: number): boolean => {
+    const remaining = getRemaining(itemName);
+    if (qty > remaining) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        [itemName]: `Cannot exceed remaining ${remaining.toFixed(2)} ${items?.[itemName]?.unit}.`,
+      }));
+      return false;
+    }
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[itemName];
+      return newErrors;
+    });
+    return true;
   };
 
   const handleModeChange = (itemName: string, mode: "quantity" | "cash") => {
@@ -50,24 +75,51 @@ export default function PledgeForm() {
     } else {
       setSelectedItems((prev) => ({ ...prev, [itemName]: 0 }));
     }
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[itemName];
+      return newErrors;
+    });
   };
 
   const handleQuantityChange = (itemName: string, value: string) => {
     const qty = parseFloat(value) || 0;
+    const remaining = getRemaining(itemName);
+
+    if (qty > remaining) {
+      setExceedModal({
+        itemName,
+        remaining,
+        unit: items?.[itemName]?.unit || "units",
+      });
+      return;
+    }
+
     setSelectedItems((prev) => ({ ...prev, [itemName]: qty }));
-    // Clear cash mode for this item
     setPledgeModes((prev) => ({ ...prev, [itemName]: "quantity" }));
     setCashValues((prev) => ({ ...prev, [itemName]: "" }));
+    validateQuantity(itemName, qty);
   };
 
   const handleCashChange = (itemName: string, value: string) => {
     const cash = parseFloat(value) || 0;
-    setCashValues((prev) => ({ ...prev, [itemName]: value }));
-    // Convert cash to quantity (if unitPrice exists)
     const unitPrice = items?.[itemName]?.unitPrice || 0;
+    const remainingCash = getRemainingCash(itemName);
+
+    if (cash > remainingCash) {
+      setExceedModal({
+        itemName,
+        remaining: getRemaining(itemName),
+        unit: items?.[itemName]?.unit || "units",
+      });
+      return;
+    }
+
+    setCashValues((prev) => ({ ...prev, [itemName]: value }));
     const qty = unitPrice > 0 ? cash / unitPrice : 0;
     setSelectedItems((prev) => ({ ...prev, [itemName]: qty }));
     setPledgeModes((prev) => ({ ...prev, [itemName]: "cash" }));
+    validateQuantity(itemName, qty);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -81,6 +133,26 @@ export default function PledgeForm() {
       setMessage("Please pledge at least one item (quantity or cash).");
       return;
     }
+
+    // Final validation: check all selected items against remaining
+    const overLimit = Object.entries(selectedItems).find(([itemName, _qty]) => {
+      if (_qty <= 0) return false;
+      const remaining = getRemaining(itemName);
+      return _qty > remaining;
+    });
+
+    if (overLimit) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [itemName, _qty] = overLimit;
+      const remaining = getRemaining(itemName);
+      setExceedModal({
+        itemName,
+        remaining,
+        unit: items?.[itemName]?.unit || "units",
+      });
+      return;
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -115,6 +187,7 @@ export default function PledgeForm() {
       setSelectedItems({});
       setPledgeModes({});
       setCashValues({});
+      setValidationErrors({});
       setSearchTerm("");
       setShowOnlyPledged(false);
     } catch (error) {
@@ -146,7 +219,6 @@ export default function PledgeForm() {
         onSubmit={handleFormSubmit}
         className="relative bg-linear-to-br from-white via-blue-50 to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl p-6 space-y-5 border border-blue-200 dark:border-gray-700 overflow-hidden"
       >
-        {/* Decorative blobs... (keep as before) */}
         <div className="absolute -top-20 -right-20 w-40 h-40 bg-linear-to-r from-blue-300 to-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 dark:opacity-10"></div>
         <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-linear-to-r from-yellow-300 to-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 dark:opacity-10"></div>
 
@@ -180,7 +252,7 @@ export default function PledgeForm() {
           />
         </div>
 
-        {/* Search & filter (unchanged) */}
+        {/* Search & filter */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div className="relative flex-1">
             <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 text-lg">
@@ -222,11 +294,16 @@ export default function PledgeForm() {
             const unitPrice = config.unitPrice || 0;
             const currentMode = pledgeModes[name] || "quantity";
             const cashValue = cashValues[name] || "";
+            const isFullyPledged = remaining <= 0;
 
             return (
               <div
                 key={name}
-                className="group relative bg-linear-to-r from-white to-blue-50 dark:from-gray-800 dark:to-gray-800/80 rounded-xl border-l-8 border-l-blue-500 shadow-md hover:shadow-xl transition-all duration-300 p-4"
+                className={`group relative bg-linear-to-r from-white to-blue-50 dark:from-gray-800 dark:to-gray-800/80 rounded-xl border-l-8 ${
+                  isFullyPledged
+                    ? "border-l-gray-400 opacity-60"
+                    : "border-l-blue-500"
+                } shadow-md hover:shadow-xl transition-all duration-300 p-4`}
               >
                 <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                   <span className="text-lg font-bold capitalize bg-linear-to-r from-blue-700 to-purple-700 dark:from-blue-300 dark:to-purple-300 bg-clip-text text-transparent">
@@ -243,8 +320,7 @@ export default function PledgeForm() {
                     📦 Pledged: {pledgedTotal.toFixed(2)} {config.unit}
                   </span>
                   <span>
-                    🎯 Remaining: {Math.max(remaining, 0).toFixed(2)}{" "}
-                    {config.unit}
+                    🎯 Remaining: {remaining.toFixed(2)} {config.unit}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -258,61 +334,79 @@ export default function PledgeForm() {
                   ></div>
                 </div>
 
-                {/* Mode toggle */}
-                <div className="flex gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => handleModeChange(name, "quantity")}
-                    className={`text-xs px-2 py-1 rounded ${
-                      currentMode === "quantity"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
-                  >
-                    Pledge Quantity
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleModeChange(name, "cash")}
-                    className={`text-xs px-2 py-1 rounded ${
-                      currentMode === "cash"
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
-                  >
-                    Pledge Cash (KES)
-                  </button>
-                </div>
-
-                {/* Input field based on mode */}
-                {currentMode === "quantity" ? (
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={selectedItems[name] || ""}
-                    onChange={(e) => handleQuantityChange(name, e.target.value)}
-                    placeholder={`Quantity in ${config.unit}`}
-                    className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 p-2 focus:border-green-500 focus:ring-2 focus:ring-green-300 transition-all"
-                  />
+                {isFullyPledged ? (
+                  <div className="text-center text-sm font-semibold text-green-600 bg-green-50 dark:bg-green-900/30 p-2 rounded-lg">
+                    ✅ Fully pledged! Thank you for your support. Please
+                    consider another item.
+                  </div>
                 ) : (
-                  <div>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={cashValue}
-                      onChange={(e) => handleCashChange(name, e.target.value)}
-                      placeholder="Amount in KES"
-                      className="w-full rounded-lg border-2 border-green-500 dark:border-green-600 bg-white dark:bg-gray-900 p-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all"
-                    />
-                    {cashValue && unitPrice > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)}{" "}
-                        {config.unit}
+                  <>
+                    {/* Mode toggle */}
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => handleModeChange(name, "quantity")}
+                        className={`text-xs px-2 py-1 rounded ${
+                          currentMode === "quantity"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        Pledge Quantity
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleModeChange(name, "cash")}
+                        className={`text-xs px-2 py-1 rounded ${
+                          currentMode === "cash"
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        Pledge Cash (KES)
+                      </button>
+                    </div>
+
+                    {/* Input field based on mode */}
+                    {currentMode === "quantity" ? (
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={selectedItems[name] || ""}
+                        onChange={(e) =>
+                          handleQuantityChange(name, e.target.value)
+                        }
+                        placeholder={`Quantity in ${config.unit} (max ${remaining.toFixed(2)})`}
+                        className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 p-2 focus:border-green-500 focus:ring-2 focus:ring-green-300 transition-all"
+                      />
+                    ) : (
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={cashValue}
+                          onChange={(e) =>
+                            handleCashChange(name, e.target.value)
+                          }
+                          placeholder={`Amount in KES (max ${formatMoney(remainingCash)})`}
+                          className="w-full rounded-lg border-2 border-green-500 dark:border-green-600 bg-white dark:bg-gray-900 p-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all"
+                        />
+                        {cashValue && unitPrice > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)}{" "}
+                            {config.unit}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {validationErrors[name] && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors[name]}
                       </p>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
             );
@@ -340,6 +434,43 @@ export default function PledgeForm() {
         </button>
       </form>
 
+      {/* Exceed Limit Modal */}
+      {exceedModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border-l-8 border-l-orange-500">
+            <div className="text-center mb-4">
+              <div className="text-6xl mb-2">⚠️</div>
+              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                Pledge Limit Exceeded
+              </h3>
+            </div>
+            <div className="space-y-3 text-gray-700 dark:text-gray-200 mb-6">
+              <p>
+                You tried to pledge more than the remaining requirement for{" "}
+                <strong className="capitalize">{exceedModal.itemName}</strong>.
+              </p>
+              <p className="bg-orange-50 dark:bg-orange-900/30 p-3 rounded-lg text-center">
+                Only{" "}
+                <strong>
+                  {exceedModal.remaining.toFixed(2)} {exceedModal.unit}
+                </strong>{" "}
+                remaining.
+              </p>
+              <p className="text-sm text-gray-500">
+                💡 Please adjust your pledge or choose another item to support.
+              </p>
+            </div>
+            <button
+              onClick={() => setExceedModal(null)}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 rounded-xl transition-all"
+            >
+              Got it, I&apos;ll adjust
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Pledge Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-linear-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-blue-200 dark:border-gray-700">
