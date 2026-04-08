@@ -63,12 +63,8 @@ export default function PledgeForm() {
       setPhoneError("Phone number is required.");
       return false;
     }
-    if (digitsOnly.length < 10) {
-      setPhoneError("Phone number must have at least 10 digits.");
-      return false;
-    }
-    if (digitsOnly.length > 15) {
-      setPhoneError("Phone number is too long (max 15 digits).");
+    if (digitsOnly.length !== 10) {
+      setPhoneError("Phone number must be exactly 10 digits (e.g., 0712345678).");
       return false;
     }
     setPhoneError("");
@@ -320,7 +316,7 @@ export default function PledgeForm() {
             required
           />
           {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
-          <p className="text-gray-500 text-xs mt-1">Enter at least 10 digits (e.g., 0712345678)</p>
+          <p className="text-gray-500 text-xs mt-1">Enter exactly 10 digits (e.g., 0712345678)</p>
         </div>
 
         {/* Search and filter section */}
