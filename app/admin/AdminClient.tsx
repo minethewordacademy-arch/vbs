@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { database } from "@/app/lib/firebase";
-import { ref, update, set, get } from "firebase/database";
+import { ref, update, set, get, remove } from "firebase/database";
 import { RealTimeProvider, useRealTime } from "../components/RealTimeProvider";
 import ItemSummaryCards from "../components/ItemSummaryCards";
 import AdminPledgeTable from "../components/AdminPledgeTable";
@@ -28,6 +28,9 @@ function AdminDashboard() {
   // Confirmation modal states
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [showAddConfirmModal, setShowAddConfirmModal] = useState(false);
+  const [showDeleteItemModal, setShowDeleteItemModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ name: string; key: string } | null>(null);
+  const [deletingItem, setDeletingItem] = useState(false);
 
   // CSV Export Function
   const downloadPledgesAsCSV = () => {
@@ -134,10 +137,59 @@ function AdminDashboard() {
     }
   };
 
+  // Delete item function
+  const handleDeleteItemClick = (itemName: string, itemKey: string) => {
+    setItemToDelete({ name: itemName, key: itemKey });
+    setShowDeleteItemModal(true);
+  };
+
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete) return;
+    setDeletingItem(true);
+    try {
+      const itemKey = itemToDelete.key;
+      // Check if any pledge contains this item
+      const hasPledges = pledges.some(pledge => 
+        Object.keys(pledge.items).includes(itemKey)
+      );
+      if (hasPledges) {
+        // Ask for extra confirmation because pledges exist
+        if (!window.confirm(`⚠️ Warning: This item has existing pledges. Deleting it will remove the item from all those pledges. Continue?`)) {
+          setShowDeleteItemModal(false);
+          setDeletingItem(false);
+          return;
+        }
+        // Remove item from all pledges
+        const updatePromises = pledges.map(async (pledge) => {
+          if (pledge.items[itemKey]) {
+            const newItems = { ...pledge.items };
+            delete newItems[itemKey];
+            const pledgeRef = ref(database, `pledges/${pledge.id}`);
+            await update(pledgeRef, { items: newItems });
+          }
+        });
+        await Promise.all(updatePromises);
+      }
+      // Delete the item node
+      const itemRef = ref(database, `items/${itemKey}`);
+      await remove(itemRef);
+      setMessage(`✅ Item "${itemToDelete.name}" deleted successfully.`);
+      // Exit edit mode if open
+      setEditMode(false);
+      refresh();
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to delete item.");
+    } finally {
+      setDeletingItem(false);
+      setShowDeleteItemModal(false);
+      setItemToDelete(null);
+    }
+  };
+
   // Open confirmation modals
   const openSaveConfirm = () => setShowSaveConfirmModal(true);
   const openAddConfirm = () => {
-    // Validate input before showing modal
     if (!newItemName.trim()) {
       setMessage("❌ Item name is required.");
       setTimeout(() => setMessage(""), 2000);
@@ -243,6 +295,13 @@ function AdminDashboard() {
                 className="border rounded px-2 py-1 w-28 dark:bg-gray-700"
               />
               <span className="text-sm text-gray-500">{config.unit}</span>
+              <button
+                onClick={() => handleDeleteItemClick(name, name)}
+                className="ml-auto text-red-600 hover:text-red-800"
+                aria-label="Delete item"
+              >
+                🗑️ Delete
+              </button>
             </div>
           ))}
         </div>
@@ -316,6 +375,38 @@ function AdminDashboard() {
               </button>
               <button
                 onClick={() => setShowAddConfirmModal(false)}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Item Confirmation Modal */}
+      {showDeleteItemModal && itemToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-xl font-bold mb-4">Delete Item</h3>
+            <p className="mb-2">
+              Are you sure you want to delete <strong>“{itemToDelete.name}”</strong>?
+            </p>
+            {pledges.some(p => p.items[itemToDelete.key]) && (
+              <p className="text-red-600 text-sm mb-4">
+                ⚠️ This item has existing pledges. Deleting it will remove the item from all those pledges.
+              </p>
+            )}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={confirmDeleteItem}
+                disabled={deletingItem}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded disabled:opacity-50"
+              >
+                {deletingItem ? "Deleting..." : "Yes, Delete"}
+              </button>
+              <button
+                onClick={() => setShowDeleteItemModal(false)}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
               >
                 Cancel
