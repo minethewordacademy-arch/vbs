@@ -77,9 +77,10 @@ export default function AdminPledgeTable() {
                       .map(([itemName, qty]) => {
                         const unitPrice = items?.[itemName]?.unitPrice || 0;
                         const subtotal = qty * unitPrice;
+                        const unit = items?.[itemName]?.unit || "units";
                         return (
                           <div key={itemName} className="text-sm">
-                            {itemName}: {qty} × {formatMoney(unitPrice)} ={" "}
+                            {itemName}: {qty.toFixed(2)} {unit} × {formatMoney(unitPrice)} ={" "}
                             <span className="font-medium">{formatMoney(subtotal)}</span>
                           </div>
                         );

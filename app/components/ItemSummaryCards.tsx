@@ -1,4 +1,3 @@
-// ItemSummaryCards.tsx
 "use client";
 
 import { useRealTime } from "./RealTimeProvider";
@@ -7,7 +6,6 @@ export default function ItemSummaryCards() {
   const { items, pledges } = useRealTime();
   if (!items) return null;
 
-  // Compute pledged totals from pledges
   const pledgedTotals: { [key: string]: number } = {};
   pledges.forEach((pledge) => {
     Object.entries(pledge.items).forEach(([item, qty]) => {
@@ -15,7 +13,6 @@ export default function ItemSummaryCards() {
     });
   });
 
-  // Format currency
   const formatMoney = (value: number) =>
     `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
 
@@ -27,6 +24,7 @@ export default function ItemSummaryCards() {
         const percent = (pledged / config.required) * 100;
         const unitPrice = config.unitPrice || 0;
         const totalValue = config.required * unitPrice;
+        const remainingCash = remaining * unitPrice;
 
         return (
           <div key={name} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -46,11 +44,15 @@ export default function ItemSummaryCards() {
               </div>
               <div className="flex justify-between">
                 <span>Pledged:</span>
-                <span className="font-semibold text-green-600">{pledged} {config.unit}</span>
+                <span className="font-semibold text-green-600">{pledged.toFixed(2)} {config.unit}</span>
               </div>
               <div className="flex justify-between">
-                <span>Remaining:</span>
-                <span className="font-semibold text-orange-600">{Math.max(remaining, 0)} {config.unit}</span>
+                <span>Remaining (qty):</span>
+                <span className="font-semibold text-orange-600">{Math.max(remaining, 0).toFixed(2)} {config.unit}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Remaining (cash):</span>
+                <span className="font-semibold text-red-600">{formatMoney(Math.max(remainingCash, 0))}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
                 <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min(percent, 100)}%` }}></div>
