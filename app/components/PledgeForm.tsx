@@ -9,16 +9,12 @@ export default function PledgeForm() {
   const { items, pledges } = useRealTime();
   const [memberName, setMemberName] = useState("");
   const [phone, setPhone] = useState("");
-  const [selectedItems, setSelectedItems] = useState<{ [key: string]: number }>(
-    {},
-  );
-  const [pledgeModes, setPledgeModes] = useState<{
-    [key: string]: "quantity" | "cash";
-  }>({});
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [selectedItems, setSelectedItems] = useState<{ [key: string]: number }>({});
+  const [pledgeModes, setPledgeModes] = useState<{ [key: string]: "quantity" | "cash" }>({});
   const [cashValues, setCashValues] = useState<{ [key: string]: string }>({});
-  const [validationErrors, setValidationErrors] = useState<{
-    [key: string]: string;
-  }>({});
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -32,6 +28,51 @@ export default function PledgeForm() {
 
   const formatMoney = (value: number) =>
     `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
+
+  // Validate name (only letters, spaces, hyphens, apostrophes)
+  const validateName = (name: string): boolean => {
+    const nameRegex = /^[A-Za-z\s\-']+$/;
+    if (!name.trim()) {
+      setNameError("Full name is required.");
+      return false;
+    }
+    if (!nameRegex.test(name)) {
+      setNameError("Name should contain only letters, spaces, hyphens, or apostrophes (no numbers).");
+      return false;
+    }
+    setNameError("");
+    return true;
+  };
+
+  // Validate phone (numeric, at least 10 digits)
+  const validatePhone = (phoneNum: string): boolean => {
+    const digitsOnly = phoneNum.replace(/\D/g, "");
+    if (!phoneNum.trim()) {
+      setPhoneError("Phone number is required.");
+      return false;
+    }
+    if (digitsOnly.length < 10) {
+      setPhoneError("Phone number must have at least 10 digits.");
+      return false;
+    }
+    if (digitsOnly.length > 15) {
+      setPhoneError("Phone number is too long (max 15 digits).");
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const handleNameChange = (value: string) => {
+    setMemberName(value);
+    validateName(value);
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Allow only digits and + (international prefix), but we'll strip non-digits for validation
+    setPhone(value);
+    validatePhone(value);
+  };
 
   const getRemaining = (itemName: string): number => {
     if (!items) return 0;
@@ -68,7 +109,6 @@ export default function PledgeForm() {
 
   const handleModeChange = (itemName: string, mode: "quantity" | "cash") => {
     setPledgeModes((prev) => ({ ...prev, [itemName]: mode }));
-    // Clear the other input when switching
     if (mode === "quantity") {
       setCashValues((prev) => ({ ...prev, [itemName]: "" }));
       setSelectedItems((prev) => ({ ...prev, [itemName]: 0 }));
@@ -124,10 +164,16 @@ export default function PledgeForm() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!memberName.trim() || !phone.trim()) {
-      setMessage("Name and phone are required.");
+
+    // Validate name and phone
+    const isNameValid = validateName(memberName);
+    const isPhoneValid = validatePhone(phone);
+
+    if (!isNameValid || !isPhoneValid) {
+      setMessage("Please correct the errors above before submitting.");
       return;
     }
+
     const hasItems = Object.values(selectedItems).some((qty) => qty > 0);
     if (!hasItems) {
       setMessage("Please pledge at least one item (quantity or cash).");
@@ -142,8 +188,7 @@ export default function PledgeForm() {
     });
 
     if (overLimit) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [itemName, _qty] = overLimit;
+      const [itemName] = overLimit;
       const remaining = getRemaining(itemName);
       setExceedModal({
         itemName,
@@ -184,6 +229,8 @@ export default function PledgeForm() {
       setMessage("✅ Pledge submitted successfully!");
       setMemberName("");
       setPhone("");
+      setNameError("");
+      setPhoneError("");
       setSelectedItems({});
       setPledgeModes({});
       setCashValues({});
@@ -233,10 +280,13 @@ export default function PledgeForm() {
           <input
             type="text"
             value={memberName}
-            onChange={(e) => setMemberName(e.target.value)}
-            className="mt-1 w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-inner focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700 transition-all"
+            onChange={(e) => handleNameChange(e.target.value)}
+            className={`mt-1 w-full rounded-lg border-2 ${
+              nameError ? "border-red-500" : "border-gray-200 dark:border-gray-600"
+            } bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-inner focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all`}
             required
           />
+          {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
         </div>
 
         <div>
@@ -246,27 +296,29 @@ export default function PledgeForm() {
           <input
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="mt-1 w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-inner focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700 transition-all"
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            className={`mt-1 w-full rounded-lg border-2 ${
+              phoneError ? "border-red-500" : "border-gray-200 dark:border-gray-600"
+            } bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-inner focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all`}
             required
           />
+          {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+          <p className="text-gray-400 text-xs mt-1">Enter at least 10 digits (numbers only, e.g., 0712345678).</p>
         </div>
 
         {/* Search & filter */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div className="relative flex-1">
-            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 text-lg">
-              🔍
-            </span>
+            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 text-lg">🔍</span>
             <input
               type="text"
               placeholder="Search items..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700 transition-all text-base"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all text-base"
             />
           </div>
-          <label className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer touch-manipulation">
+          <label className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               checked={showOnlyPledged}
@@ -300,9 +352,7 @@ export default function PledgeForm() {
               <div
                 key={name}
                 className={`group relative bg-linear-to-r from-white to-blue-50 dark:from-gray-800 dark:to-gray-800/80 rounded-xl border-l-8 ${
-                  isFullyPledged
-                    ? "border-l-gray-400 opacity-60"
-                    : "border-l-blue-500"
+                  isFullyPledged ? "border-l-gray-400 opacity-60" : "border-l-blue-500"
                 } shadow-md hover:shadow-xl transition-all duration-300 p-4`}
               >
                 <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
@@ -314,14 +364,9 @@ export default function PledgeForm() {
                   </span>
                 </div>
 
-                {/* Progress & remaining info */}
                 <div className="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  <span>
-                    📦 Pledged: {pledgedTotal.toFixed(2)} {config.unit}
-                  </span>
-                  <span>
-                    🎯 Remaining: {remaining.toFixed(2)} {config.unit}
-                  </span>
+                  <span>📦 Pledged: {pledgedTotal.toFixed(2)} {config.unit}</span>
+                  <span>🎯 Remaining: {remaining.toFixed(2)} {config.unit}</span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>💰 Unit price: {formatMoney(unitPrice)}</span>
@@ -336,12 +381,10 @@ export default function PledgeForm() {
 
                 {isFullyPledged ? (
                   <div className="text-center text-sm font-semibold text-green-600 bg-green-50 dark:bg-green-900/30 p-2 rounded-lg">
-                    ✅ Fully pledged! Thank you for your support. Please
-                    consider another item.
+                    ✅ Fully pledged! Thank you for your support. Please consider another item.
                   </div>
                 ) : (
                   <>
-                    {/* Mode toggle */}
                     <div className="flex gap-2 mb-2">
                       <button
                         type="button"
@@ -367,16 +410,13 @@ export default function PledgeForm() {
                       </button>
                     </div>
 
-                    {/* Input field based on mode */}
                     {currentMode === "quantity" ? (
                       <input
                         type="number"
                         min="0"
                         step="0.01"
                         value={selectedItems[name] || ""}
-                        onChange={(e) =>
-                          handleQuantityChange(name, e.target.value)
-                        }
+                        onChange={(e) => handleQuantityChange(name, e.target.value)}
                         placeholder={`Quantity in ${config.unit} (max ${remaining.toFixed(2)})`}
                         className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 p-2 focus:border-green-500 focus:ring-2 focus:ring-green-300 transition-all"
                       />
@@ -387,24 +427,19 @@ export default function PledgeForm() {
                           min="0"
                           step="1"
                           value={cashValue}
-                          onChange={(e) =>
-                            handleCashChange(name, e.target.value)
-                          }
+                          onChange={(e) => handleCashChange(name, e.target.value)}
                           placeholder={`Amount in KES (max ${formatMoney(remainingCash)})`}
                           className="w-full rounded-lg border-2 border-green-500 dark:border-green-600 bg-white dark:bg-gray-900 p-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all"
                         />
                         {cashValue && unitPrice > 0 && (
                           <p className="text-xs text-gray-500 mt-1">
-                            ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)}{" "}
-                            {config.unit}
+                            ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)} {config.unit}
                           </p>
                         )}
                       </div>
                     )}
                     {validationErrors[name] && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {validationErrors[name]}
-                      </p>
+                      <p className="text-red-500 text-xs mt-1">{validationErrors[name]}</p>
                     )}
                   </>
                 )}
@@ -440,9 +475,7 @@ export default function PledgeForm() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border-l-8 border-l-orange-500">
             <div className="text-center mb-4">
               <div className="text-6xl mb-2">⚠️</div>
-              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                Pledge Limit Exceeded
-              </h3>
+              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400">Pledge Limit Exceeded</h3>
             </div>
             <div className="space-y-3 text-gray-700 dark:text-gray-200 mb-6">
               <p>
@@ -450,15 +483,9 @@ export default function PledgeForm() {
                 <strong className="capitalize">{exceedModal.itemName}</strong>.
               </p>
               <p className="bg-orange-50 dark:bg-orange-900/30 p-3 rounded-lg text-center">
-                Only{" "}
-                <strong>
-                  {exceedModal.remaining.toFixed(2)} {exceedModal.unit}
-                </strong>{" "}
-                remaining.
+                Only <strong>{exceedModal.remaining.toFixed(2)} {exceedModal.unit}</strong> remaining.
               </p>
-              <p className="text-sm text-gray-500">
-                💡 Please adjust your pledge or choose another item to support.
-              </p>
+              <p className="text-sm text-gray-500">💡 Please adjust your pledge or choose another item to support.</p>
             </div>
             <button
               onClick={() => setExceedModal(null)}
@@ -478,24 +505,17 @@ export default function PledgeForm() {
               Confirm Your Pledge
             </h3>
             <div className="space-y-2 mb-6 text-gray-700 dark:text-gray-200">
-              <p>
-                <span className="font-bold">✨ Name:</span> {memberName}
-              </p>
-              <p>
-                <span className="font-bold">📞 Phone:</span> {phone}
-              </p>
-              <p>
-                <span className="font-bold">🎁 Items:</span>
-              </p>
+              <p><span className="font-bold">✨ Name:</span> {memberName}</p>
+              <p><span className="font-bold">📞 Phone:</span> {phone}</p>
+              <p><span className="font-bold">🎁 Items:</span></p>
               <ul className="list-disc list-inside pl-2 space-y-1">
                 {Object.entries(selectedItems).map(([name, qty]) =>
                   qty > 0 ? (
                     <li key={name} className="font-medium">
                       {name}: {qty.toFixed(2)} {items?.[name]?.unit}
-                      {items?.[name]?.unitPrice &&
-                        ` (≈ ${formatMoney(qty * items[name].unitPrice)})`}
+                      {items?.[name]?.unitPrice && ` (≈ ${formatMoney(qty * items[name].unitPrice)})`}
                     </li>
-                  ) : null,
+                  ) : null
                 )}
               </ul>
             </div>
