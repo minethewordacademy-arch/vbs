@@ -138,22 +138,24 @@ export default function PledgeForm() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 items-center justify-between">
-          <div className="flex-1 min-w-37.5">
+        {/* 🔍 Improved search & filter area – mobile friendly */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div className="relative flex-1">
+            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 text-lg">🔍</span>
             <input
               type="text"
-              placeholder="🔍 Search items..."
+              placeholder="Search items..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-inner focus:border-purple-500 focus:ring-2 focus:ring-purple-300"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700 transition-all text-base"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer touch-manipulation">
             <input
               type="checkbox"
               checked={showOnlyPledged}
               onChange={(e) => setShowOnlyPledged(e.target.checked)}
-              className="rounded border-gray-300 text-blue-500 focus:ring-blue-400"
+              className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-400"
             />
             Show only items with pledges
           </label>
