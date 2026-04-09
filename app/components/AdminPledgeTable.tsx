@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRealTime } from "./RealTimeProvider";
 import { database } from "@/app/lib/firebase";
-import { ref, remove } from "firebase/database";
+import { ref, remove, update } from "firebase/database";
 
 export default function AdminPledgeTable() {
-  const { pledges, items } = useRealTime(); // also get items for unit prices
+  const { pledges, items } = useRealTime();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -39,9 +39,18 @@ export default function AdminPledgeTable() {
     setPendingDeleteId(null);
   };
 
+  const handleMarkPaid = async (pledgeId: string) => {
+    if (!confirm("Confirm payment received? This will mark the pledge as paid.")) return;
+    try {
+      await update(ref(database), { [`pledges/${pledgeId}/paymentStatus`]: 'paid' });
+    } catch (error) {
+      console.error("Failed to update payment status:", error);
+      alert("Error updating status. Try again.");
+    }
+  };
+
   if (!pledges.length) return <p className="text-gray-500">No pledges yet.</p>;
 
-  // Helper to compute total pledge value
   const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
     if (!items) return 0;
     return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
@@ -60,6 +69,7 @@ export default function AdminPledgeTable() {
               <th className="px-4 py-2 text-left">Phone</th>
               <th className="px-4 py-2 text-left">Items (qty × unit price)</th>
               <th className="px-4 py-2 text-left">Total (KES)</th>
+              <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Date</th>
               <th className="px-4 py-2"></th>
             </tr>
@@ -67,6 +77,7 @@ export default function AdminPledgeTable() {
           <tbody>
             {pledges.map((pledge) => {
               const totalValue = computePledgeTotal(pledge.items);
+              const isPaid = pledge.paymentStatus === "paid";
               return (
                 <tr key={pledge.id} className="border-t dark:border-gray-700">
                   <td className="px-4 py-2">{pledge.memberName}</td>
@@ -80,14 +91,36 @@ export default function AdminPledgeTable() {
                         const unit = items?.[itemName]?.unit || "units";
                         return (
                           <div key={itemName} className="text-sm">
-                            {itemName}: {qty.toFixed(2)} {unit} × {formatMoney(unitPrice)} ={" "}
-                            <span className="font-medium">{formatMoney(subtotal)}</span>
+                            {itemName}: {qty.toFixed(2)} {unit} ×{" "}
+                            {formatMoney(unitPrice)} ={" "}
+                            <span className="font-medium">
+                              {formatMoney(subtotal)}
+                            </span>
                           </div>
                         );
                       })}
                   </td>
                   <td className="px-4 py-2 font-bold text-green-600">
                     {formatMoney(totalValue)}
+                  </td>
+                  <td className="px-4 py-2">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        isPaid
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {isPaid ? "Paid" : "Pending"}
+                    </span>
+                    {!isPaid && (
+                      <button
+                        onClick={() => handleMarkPaid(pledge.id!)}
+                        className="ml-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"
+                      >
+                        Mark Paid
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 py-2">
                     {new Date(pledge.timestamp).toLocaleString()}
@@ -114,7 +147,8 @@ export default function AdminPledgeTable() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
             <p className="mb-6">
-              Are you sure you want to delete this pledge? This action cannot be undone.
+              Are you sure you want to delete this pledge? This action cannot be
+              undone.
             </p>
             <div className="flex gap-3">
               <button

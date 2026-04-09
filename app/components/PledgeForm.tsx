@@ -11,10 +11,16 @@ export default function PledgeForm() {
   const [phone, setPhone] = useState("");
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [selectedItems, setSelectedItems] = useState<{ [key: string]: number }>({});
-  const [pledgeModes, setPledgeModes] = useState<{ [key: string]: "quantity" | "cash" }>({});
+  const [selectedItems, setSelectedItems] = useState<{ [key: string]: number }>(
+    {},
+  );
+  const [pledgeModes, setPledgeModes] = useState<{
+    [key: string]: "quantity" | "cash";
+  }>({});
   const [cashValues, setCashValues] = useState<{ [key: string]: string }>({});
-  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -26,7 +32,7 @@ export default function PledgeForm() {
     remaining: number;
     unit: string;
   } | null>(null);
-  
+
   const itemsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,7 +56,9 @@ export default function PledgeForm() {
       return false;
     }
     if (!nameRegex.test(name)) {
-      setNameError("Name should contain only letters, spaces, hyphens, or apostrophes (no numbers).");
+      setNameError(
+        "Name should contain only letters, spaces, hyphens, or apostrophes (no numbers).",
+      );
       return false;
     }
     setNameError("");
@@ -64,7 +72,9 @@ export default function PledgeForm() {
       return false;
     }
     if (digitsOnly.length !== 10) {
-      setPhoneError("Phone number must be exactly 10 digits (e.g., 0712345678).");
+      setPhoneError(
+        "Phone number must be exactly 10 digits (e.g., 0712345678).",
+      );
       return false;
     }
     setPhoneError("");
@@ -211,12 +221,22 @@ export default function PledgeForm() {
     setSubmitting(true);
     setMessage("");
 
+    // Calculate total amount from selected items
+    let totalAmount = 0;
+    for (const [itemName, qty] of Object.entries(selectedItems)) {
+      if (qty > 0 && items?.[itemName]?.unitPrice) {
+        totalAmount += qty * items[itemName].unitPrice;
+      }
+    }
+
     try {
       const pledgeData = {
         memberName: memberName.trim(),
         phone: phone.trim(),
         items: selectedItems,
         timestamp: new Date().toISOString(),
+        totalAmount: totalAmount,
+        paymentStatus: "pending", // default
       };
       const pledgesRef = ref(database, "pledges");
       await push(pledgesRef, pledgeData);
@@ -231,7 +251,13 @@ export default function PledgeForm() {
         }),
       );
 
-      setMessage("✅ Pledge submitted successfully!");
+      // Show success message with payment details
+      setMessage(
+        `✅ Pledge submitted successfully! Total: ${formatMoney(totalAmount)}\n\n` +
+          `💳 Payment Details:\nPaybill: 4029285\nAccount: VBX Food\n\n` +
+          `Please complete payment via M-Pesa. Admin will confirm once received.`,
+      );
+      // Reset form
       setMemberName("");
       setPhone("");
       setNameError("");
@@ -243,7 +269,7 @@ export default function PledgeForm() {
       setSearchTerm("");
       setShowOnlyPledged(false);
       setShowOnlyPending(false);
-      
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error(error);
@@ -258,15 +284,18 @@ export default function PledgeForm() {
   const filteredItems = Object.entries(items).filter(([name]) => {
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
-    
-    const pledgedTotal = pledges.reduce((sum, p) => sum + (p.items[name] || 0), 0);
+
+    const pledgedTotal = pledges.reduce(
+      (sum, p) => sum + (p.items[name] || 0),
+      0,
+    );
     const remaining = items[name].required - pledgedTotal;
     const hasPledges = pledgedTotal > 0;
     const isPending = remaining > 0;
-    
+
     if (showOnlyPledged && !hasPledges) return false;
     if (showOnlyPending && !isPending) return false;
-    
+
     return true;
   });
 
@@ -295,11 +324,15 @@ export default function PledgeForm() {
             value={memberName}
             onChange={(e) => handleNameChange(e.target.value)}
             className={`w-full rounded-lg border-2 p-3 text-base ${
-              nameError ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              nameError
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             } bg-white dark:bg-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all`}
             required
           />
-          {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
+          {nameError && (
+            <p className="text-red-500 text-sm mt-1">{nameError}</p>
+          )}
         </div>
 
         <div>
@@ -311,18 +344,26 @@ export default function PledgeForm() {
             value={phone}
             onChange={(e) => handlePhoneChange(e.target.value)}
             className={`w-full rounded-lg border-2 p-3 text-base ${
-              phoneError ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+              phoneError
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
             } bg-white dark:bg-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-300 transition-all`}
             required
           />
-          {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
-          <p className="text-gray-500 text-xs mt-1">Enter exactly 10 digits (e.g., 0712345678)</p>
+          {phoneError && (
+            <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+          )}
+          <p className="text-gray-500 text-xs mt-1">
+            Enter exactly 10 digits (e.g., 0712345678)
+          </p>
         </div>
 
         {/* Search and filter section */}
         <div className="flex flex-col gap-3">
           <div className="relative">
-            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">🔍</span>
+            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+              🔍
+            </span>
             <input
               type="text"
               placeholder="Search items..."
@@ -340,7 +381,7 @@ export default function PledgeForm() {
               </button>
             )}
           </div>
-          
+
           <div className="flex gap-3 justify-center flex-wrap">
             <label className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-sm font-medium cursor-pointer">
               <input
@@ -374,7 +415,9 @@ export default function PledgeForm() {
 
         {/* Filter stats */}
         <div className="flex justify-between items-center text-xs text-gray-500 px-1">
-          <span>Showing {filteredItems.length} of {Object.keys(items).length} items</span>
+          <span>
+            Showing {filteredItems.length} of {Object.keys(items).length} items
+          </span>
           {(searchTerm || showOnlyPledged || showOnlyPending) && (
             <button
               onClick={clearAllFilters}
@@ -385,7 +428,10 @@ export default function PledgeForm() {
           )}
         </div>
 
-        <div ref={itemsContainerRef} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+        <div
+          ref={itemsContainerRef}
+          className="space-y-4 max-h-[60vh] overflow-y-auto pr-1"
+        >
           {filteredItems.length === 0 && (
             <p className="text-gray-500 text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
               No items match your filters.
@@ -408,7 +454,9 @@ export default function PledgeForm() {
               <div
                 key={name}
                 className={`rounded-xl border-l-8 ${
-                  isFullyPledged ? "border-l-gray-400 opacity-60" : "border-l-blue-500"
+                  isFullyPledged
+                    ? "border-l-gray-400 opacity-60"
+                    : "border-l-blue-500"
                 } bg-white dark:bg-gray-800 shadow p-4`}
               >
                 <div className="flex justify-between items-start gap-2 mb-2 flex-wrap">
@@ -421,8 +469,12 @@ export default function PledgeForm() {
                 </div>
 
                 <div className="flex justify-between text-sm mb-1">
-                  <span>📦 Pledged: {pledgedTotal.toFixed(2)} {config.unit}</span>
-                  <span>🎯 Remaining: {remaining.toFixed(2)} {config.unit}</span>
+                  <span>
+                    📦 Pledged: {pledgedTotal.toFixed(2)} {config.unit}
+                  </span>
+                  <span>
+                    🎯 Remaining: {remaining.toFixed(2)} {config.unit}
+                  </span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 mb-2">
                   <span>💰 Unit: {formatMoney(unitPrice)}</span>
@@ -472,7 +524,9 @@ export default function PledgeForm() {
                         min="0"
                         step="0.01"
                         value={selectedItems[name] || ""}
-                        onChange={(e) => handleQuantityChange(name, e.target.value)}
+                        onChange={(e) =>
+                          handleQuantityChange(name, e.target.value)
+                        }
                         placeholder={`Quantity (max ${remaining.toFixed(2)} ${config.unit})`}
                         className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-3 text-base"
                       />
@@ -483,19 +537,24 @@ export default function PledgeForm() {
                           min="0"
                           step="1"
                           value={cashValue}
-                          onChange={(e) => handleCashChange(name, e.target.value)}
+                          onChange={(e) =>
+                            handleCashChange(name, e.target.value)
+                          }
                           placeholder={`Amount (max ${formatMoney(remainingCash)})`}
                           className="w-full rounded-lg border-2 border-green-500 dark:border-green-600 bg-white dark:bg-gray-700 p-3 text-base"
                         />
                         {cashValue && unitPrice > 0 && (
                           <p className="text-xs text-gray-500 mt-1">
-                            ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)} {config.unit}
+                            ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)}{" "}
+                            {config.unit}
                           </p>
                         )}
                       </div>
                     )}
                     {validationErrors[name] && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors[name]}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {validationErrors[name]}
+                      </p>
                     )}
                   </>
                 )}
@@ -536,7 +595,9 @@ export default function PledgeForm() {
           >
             <div className="text-center mb-4">
               <div className="text-6xl mb-2">⚠️</div>
-              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400">Pledge Limit Exceeded</h3>
+              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                Pledge Limit Exceeded
+              </h3>
             </div>
             <div className="space-y-3 text-gray-700 dark:text-gray-200 mb-6">
               <p>
@@ -544,9 +605,15 @@ export default function PledgeForm() {
                 <strong className="capitalize">{exceedModal.itemName}</strong>.
               </p>
               <p className="bg-orange-50 dark:bg-orange-900/30 p-3 rounded-lg text-center">
-                Only <strong>{exceedModal.remaining.toFixed(2)} {exceedModal.unit}</strong> remaining.
+                Only{" "}
+                <strong>
+                  {exceedModal.remaining.toFixed(2)} {exceedModal.unit}
+                </strong>{" "}
+                remaining.
               </p>
-              <p className="text-sm text-gray-500">💡 Please adjust your pledge or choose another item.</p>
+              <p className="text-sm text-gray-500">
+                💡 Please adjust your pledge or choose another item.
+              </p>
             </div>
             <button
               onClick={() => setExceedModal(null)}
@@ -571,17 +638,24 @@ export default function PledgeForm() {
               Confirm Your Pledge
             </h3>
             <div className="space-y-2 mb-6 text-gray-700 dark:text-gray-200">
-              <p><span className="font-bold">✨ Name:</span> {memberName}</p>
-              <p><span className="font-bold">📞 Phone:</span> {phone}</p>
-              <p><span className="font-bold">🎁 Items:</span></p>
+              <p>
+                <span className="font-bold">✨ Name:</span> {memberName}
+              </p>
+              <p>
+                <span className="font-bold">📞 Phone:</span> {phone}
+              </p>
+              <p>
+                <span className="font-bold">🎁 Items:</span>
+              </p>
               <ul className="list-disc list-inside pl-2 space-y-1 max-h-40 overflow-y-auto">
                 {Object.entries(selectedItems).map(([name, qty]) =>
                   qty > 0 ? (
                     <li key={name} className="font-medium text-sm">
                       {name}: {qty.toFixed(2)} {items?.[name]?.unit}
-                      {items?.[name]?.unitPrice && ` (≈ ${formatMoney(qty * items[name].unitPrice)})`}
+                      {items?.[name]?.unitPrice &&
+                        ` (≈ ${formatMoney(qty * items[name].unitPrice)})`}
                     </li>
-                  ) : null
+                  ) : null,
                 )}
               </ul>
             </div>

@@ -15,3 +15,13 @@ export interface Pledge {
   items: { [itemName: string]: number };
   timestamp: string;
 }
+
+export interface Pledge {
+  id?: string;
+  memberName: string;
+  phone: string;
+  items: { [itemName: string]: number };
+  timestamp: string;
+  totalAmount?: number;        // Total cash value of pledged items
+  paymentStatus?: 'pending' | 'paid'; // Default 'pending'
+}

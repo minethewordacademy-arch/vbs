@@ -93,9 +93,19 @@ export default async function HomePage({
         </div>
         <RealTimeProvider>
           <PledgeForm />
-          <div className="mt-8">
-          </div>
         </RealTimeProvider>
+
+        {/* Payment Details Footer */}
+        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-center text-sm border border-blue-200 dark:border-blue-800">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">💰 Payment Details (for cash pledges)</p>
+          <p className="text-gray-700 dark:text-gray-300 mt-1">
+            Paybill: <strong className="text-blue-700 dark:text-blue-300">4029285</strong> | 
+            Account: <strong className="text-blue-700 dark:text-blue-300">VBX Food</strong>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            After pledging, complete M-Pesa payment. Admin will mark as paid.
+          </p>
+        </div>
       </div>
     </main>
   );

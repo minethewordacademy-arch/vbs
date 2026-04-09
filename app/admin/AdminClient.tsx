@@ -38,6 +38,15 @@ function AdminDashboard() {
   } | null>(null);
   const [deletingItem, setDeletingItem] = useState(false);
 
+  // Add this helper near the top of AdminDashboard (after the state declarations)
+const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
+  if (!items) return 0;
+  return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
+    const unitPrice = items[itemName]?.unitPrice || 0;
+    return total + qty * unitPrice;
+  }, 0);
+};
+
   // CSV Export Function
   const downloadPledgesAsCSV = () => {
     if (!pledges || pledges.length === 0) {
@@ -46,11 +55,21 @@ function AdminDashboard() {
       return;
     }
 
-    const headers = ["Member Name", "Phone", "Date", "Items (item: quantity)"];
+    const headers = [
+      "Member Name",
+      "Phone",
+      "Date",
+      "Total (KES)",
+      "Status",
+      "Items (item: quantity)",
+    ];
     const rows = pledges.map((pledge) => [
       pledge.memberName,
       pledge.phone,
       new Date(pledge.timestamp).toLocaleString(),
+      pledge.totalAmount?.toFixed(2) ||
+        computePledgeTotal(pledge.items).toFixed(2),
+      pledge.paymentStatus || "pending",
       Object.entries(pledge.items)
         .filter(([, qty]) => qty > 0)
         .map(([item, qty]) => `${item}: ${qty}`)
