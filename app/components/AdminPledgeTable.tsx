@@ -11,6 +11,11 @@ export default function AdminPledgeTable() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Payment confirmation modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
   const formatMoney = (value: number) =>
     `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
 
@@ -39,14 +44,32 @@ export default function AdminPledgeTable() {
     setPendingDeleteId(null);
   };
 
-  const handleMarkPaid = async (pledgeId: string) => {
-    if (!confirm("Confirm payment received? This will mark the pledge as paid.")) return;
+  // Open payment confirmation modal
+  const handleMarkPaidClick = (pledgeId: string) => {
+    setPendingPaymentId(pledgeId);
+    setShowPaymentModal(true);
+  };
+
+  // Confirm mark as paid
+  const confirmMarkPaid = async () => {
+    if (!pendingPaymentId) return;
+    setProcessingPayment(true);
     try {
-      await update(ref(database), { [`pledges/${pledgeId}/paymentStatus`]: 'paid' });
+      await update(ref(database), { [`pledges/${pendingPaymentId}/paymentStatus`]: 'paid' });
+      // Optional: show success message (could be a toast, but we'll rely on the UI update)
     } catch (error) {
       console.error("Failed to update payment status:", error);
       alert("Error updating status. Try again.");
+    } finally {
+      setProcessingPayment(false);
+      setShowPaymentModal(false);
+      setPendingPaymentId(null);
     }
+  };
+
+  const cancelPayment = () => {
+    setShowPaymentModal(false);
+    setPendingPaymentId(null);
   };
 
   if (!pledges.length) return <p className="text-gray-500">No pledges yet.</p>;
@@ -115,7 +138,7 @@ export default function AdminPledgeTable() {
                     </span>
                     {!isPaid && (
                       <button
-                        onClick={() => handleMarkPaid(pledge.id!)}
+                        onClick={() => handleMarkPaidClick(pledge.id!)}
                         className="ml-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"
                       >
                         Mark Paid
@@ -147,8 +170,7 @@ export default function AdminPledgeTable() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
             <p className="mb-6">
-              Are you sure you want to delete this pledge? This action cannot be
-              undone.
+              Are you sure you want to delete this pledge? This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
@@ -160,6 +182,33 @@ export default function AdminPledgeTable() {
               </button>
               <button
                 onClick={cancelDelete}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Confirmation Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-xl font-bold mb-4">Confirm Payment Received</h3>
+            <p className="mb-6">
+              Mark this pledge as <strong>paid</strong>? This action can be undone (you can change status later if needed).
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={confirmMarkPaid}
+                disabled={processingPayment}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded disabled:opacity-50"
+              >
+                {processingPayment ? "Processing..." : "Yes, Mark as Paid"}
+              </button>
+              <button
+                onClick={cancelPayment}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
               >
                 Cancel
