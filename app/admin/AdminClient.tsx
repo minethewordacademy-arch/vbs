@@ -43,7 +43,9 @@ function AdminDashboard() {
   const [deletingAll, setDeletingAll] = useState(false);
 
   // Helper to compute pledge total
-  const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
+  const computePledgeTotal = (pledgeItems: {
+    [key: string]: number;
+  }): number => {
     if (!items) return 0;
     return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
       const unitPrice = items[itemName]?.unitPrice || 0;
@@ -103,37 +105,76 @@ function AdminDashboard() {
     setTimeout(() => setMessage(""), 2000);
   };
 
-  // Seed PDF data
+  // Seed PDF data – updated with 2026 Camp Meeting Budget
   const seedFromPDF = async () => {
     const pdfItems = {
-      rice: { required: 170, unit: "Kgs", unitPrice: 180 },
-      lentils: { required: 40, unit: "Kgs", unitPrice: 240 },
-      beans: { required: 30, unit: "Kgs", unitPrice: 180 },
-      maize_flour: { required: 20, unit: "Kgs", unitPrice: 100 },
-      dengu: { required: 15, unit: "Kgs", unitPrice: 180 },
-      chapati_flour: { required: 24, unit: "Kgs", unitPrice: 100 },
-      eggs: { required: 5, unit: "Trays", unitPrice: 450 },
-      vegetables: { required: 1, unit: "Lot", unitPrice: 1000 },
-      bread: { required: 120, unit: "Loaves", unitPrice: 60 },
-      milk: { required: 200, unit: "Packets", unitPrice: 60 },
-      uji_flour: { required: 5, unit: "Kgs", unitPrice: 100 },
-      mandazi: { required: 35, unit: "Kgs", unitPrice: 100 },
-      sugar: { required: 5, unit: "Kgs", unitPrice: 150 },
-      chocolate: { required: 1, unit: "lot", unitPrice: 400 },
-      cooking_oil: { required: 20, unit: "Liters", unitPrice: 300 },
-      nyanya: { required: 1, unit: "Lot", unitPrice: 2000 },
-      onions: { required: 1, unit: "Lot", unitPrice: 1000 },
-      additives: { required: 1, unit: "Lot", unitPrice: 500 },
-      cabbage: { required: 1, unit: "Lot", unitPrice: 500 },
-      melon: { required: 1, unit: "Lot", unitPrice: 3000 },
-      ndizi: { required: 1, unit: "Lot", unitPrice: 800 },
-      charcoal: { required: 1, unit: "Sack", unitPrice: 3000 },
-      gas: { required: 1, unit: "Lot", unitPrice: 2400 },
-      utensils_cleaning: { required: 1, unit: "Lot", unitPrice: 6000 },
-      catering_labour: { required: 1, unit: "Lot", unitPrice: 10000 },
-      bananas: { required: 1, unit: "Lot", unitPrice: 1500 },
-      crafts_snack_station: { required: 1, unit: "Lot", unitPrice: 60000 }
+      // --- Catering Items ---
+      beans: { required: 160, unit: "kg", unitPrice: 140 },
+      eggs: { required: 25, unit: "Trays", unitPrice: 450 },
+      lentils: { required: 43, unit: "kg", unitPrice: 220 },
+      white_kunde: { required: 30, unit: "kg", unitPrice: 130 },
+      red_kunde: { required: 40, unit: "kg", unitPrice: 140 },
+      dengu: { required: 60, unit: "kg", unitPrice: 155 },
+      maize_meal_flour: { required: 164, unit: "kg", unitPrice: 75 },
+      brown_flour: { required: 70, unit: "kg", unitPrice: 120 },
+      wheat_flour_exe: { required: 26, unit: "packet", unitPrice: 187 },
+      atta_mark_1: { required: 12, unit: "packet", unitPrice: 200 },
+      rice_sunrice: { required: 405, unit: "kgs", unitPrice: 160 },
+      prestige_or_blue_band: { required: 6, unit: "kg", unitPrice: 400 },
+      salt_kensalt: { required: 6, unit: "packet", unitPrice: 70 },
+      salad_oil_golden_fry: { required: 10.5, unit: "Liters", unitPrice: 2500 },
+      white_pepper: { required: 25, unit: "Jar(100g)", unitPrice: 70 },
+      black_pepper: { required: 33, unit: "Jar(100g)", unitPrice: 28 },
+      tomato_paste: { required: 21, unit: "Tin(3.3)", unitPrice: 100 },
+      mixed_spices: { required: 2, unit: "Tin", unitPrice: 200 },
+      soy_sauce: { required: 2, unit: "Bottle(750ml)", unitPrice: 245 },
+      self_raising_exe: { required: 24, unit: "packet", unitPrice: 208 },
+      bananas: { required: 100, unit: "kgs", unitPrice: 60 },
+      garam_masala: { required: 2, unit: "Tin", unitPrice: 200 },
+      vinegar_white: { required: 1, unit: "700mls", unitPrice: 350 },
+      mala_milk: { required: 10, unit: "1Ltr", unitPrice: 165 },
+      milk_longlife: { required: 28, unit: "ctn", unitPrice: 620 },
+      bread_pieces: { required: 30, unit: "pieces", unitPrice: 140 },
+      sugar: { required: 50, unit: "kg", unitPrice: 160 },
+      soya_grams: { required: 1, unit: "kg", unitPrice: 450 },
+      drinking_chocolate: { required: 10, unit: "Grams(200)", unitPrice: 450 },
+      toothpicks: { required: 12, unit: "jar", unitPrice: 70 },
+      serviettes: { required: 36, unit: "packet", unitPrice: 100 },
+      foil_paper: { required: 2, unit: "rolls", unitPrice: 1500 },
+      paper_towels: { required: 6, unit: "rolls", unitPrice: 120 },
+      bio_gel: { required: 24, unit: "bottle", unitPrice: 170 },
+      bar_soap_menengai: { required: 6, unit: "kg", unitPrice: 155 },
+      detergent: { required: 3, unit: "kg", unitPrice: 245 },
+      moto_sawa_gel: { required: 3, unit: "5 litre", unitPrice: 1350 },
+      steel_wool: { required: 2, unit: "bale", unitPrice: 200 },
+      corn_pieces: { required: 4, unit: "pieces", unitPrice: 168 },
+      scotch_brite_heavy: { required: 12, unit: "pieces", unitPrice: 40 },
+      spontex: { required: 2, unit: "pieces", unitPrice: 100 },
+      cling_film: { required: 2, unit: "pieces", unitPrice: 750 },
+      tomatoes_carton: { required: 1, unit: "carton", unitPrice: 14000 },
+      onions: { required: 100, unit: "kg", unitPrice: 100 },
+      dhania: { required: 1, unit: "bun", unitPrice: 300 },
+      hoho: { required: 1, unit: "kg", unitPrice: 5000 },
+      cabbages: { required: 72, unit: "heads", unitPrice: 50 },
+      potatoes_irish: { required: 10, unit: "Debe", unitPrice: 900 },
+      fresh_ginger: { required: 5, unit: "kg", unitPrice: 350 },
+      fresh_garlic: { required: 5, unit: "kg", unitPrice: 400 },
+      carrots: { required: 20, unit: "kg", unitPrice: 150 },
+      green_peas: { required: 20, unit: "kgs", unitPrice: 250 },
+      kienyeji_mboga: { required: 1, unit: "Sack", unitPrice: 18000 },
+      lemons_and_chilies: { required: 1, unit: "pcs", unitPrice: 1500 },
+      sweet_potatoes: { required: 30, unit: "kgs", unitPrice: 60 },
+      nduma: { required: 20, unit: "kg", unitPrice: 100 },
+      charcoal_bags: { required: 2, unit: "bags", unitPrice: 3000 },
+      gas_cylinder: { required: 3, unit: "cylinder", unitPrice: 7500 },
+      mineral_water: { required: 42, unit: "Bale", unitPrice: 350 },
+
+      // --- Accommodation Items ---
+      beds: { required: 59, unit: "pieces", unitPrice: 0 },
+      duvet_blankets: { required: 67, unit: "pieces", unitPrice: 0 },
+      mattresses: { required: 33, unit: "pieces", unitPrice: 0 },
     };
+
     const updates: Record<
       string,
       { required: number; unit: string; unitPrice: number; pledged: number }
@@ -142,7 +183,7 @@ function AdminDashboard() {
       updates[`items/${key}`] = { ...val, pledged: 0 };
     }
     await update(ref(database), updates);
-    setMessage("✅ PDF data seeded!");
+    setMessage("✅ Camp Meeting 2026 budget data seeded!");
     refresh();
   };
 
@@ -295,7 +336,7 @@ function AdminDashboard() {
   const confirmDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      const pledgesRef = ref(database, 'pledges');
+      const pledgesRef = ref(database, "pledges");
       await remove(pledgesRef);
       setMessage("✅ All pledges deleted successfully.");
       refresh();
@@ -513,9 +554,15 @@ function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Confirm New Item</h3>
             <div className="space-y-2 mb-6">
-              <p><strong>Name:</strong> {newItemName}</p>
-              <p><strong>Required:</strong> {newItemRequired} {newItemUnit}</p>
-              <p><strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}</p>
+              <p>
+                <strong>Name:</strong> {newItemName}
+              </p>
+              <p>
+                <strong>Required:</strong> {newItemRequired} {newItemUnit}
+              </p>
+              <p>
+                <strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}
+              </p>
             </div>
             <div className="flex gap-3">
               <button
@@ -542,7 +589,8 @@ function AdminDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Delete Item</h3>
             <p className="mb-2">
-              Are you sure you want to delete <strong>“{itemToDelete.name}”</strong>?
+              Are you sure you want to delete{" "}
+              <strong>“{itemToDelete.name}”</strong>?
             </p>
             {pledges.some((p) => p.items[itemToDelete.key]) && (
               <p className="text-red-600 text-sm mb-4">
@@ -578,7 +626,8 @@ function AdminDashboard() {
               Are you sure you want to delete <strong>ALL</strong> pledges?
             </p>
             <p className="text-red-600 text-sm mb-4">
-              ⚠️ This action cannot be undone. All pledge records will be permanently removed.
+              ⚠️ This action cannot be undone. All pledge records will be
+              permanently removed.
             </p>
             <div className="flex gap-3 mt-4">
               <button
