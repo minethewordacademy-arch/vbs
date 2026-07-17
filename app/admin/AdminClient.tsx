@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { database } from "@/app/lib/firebase";
 import { ref, update, set, get, remove } from "firebase/database";
 import { RealTimeProvider, useRealTime } from "../components/RealTimeProvider";
@@ -38,14 +38,18 @@ function AdminDashboard() {
   } | null>(null);
   const [deletingItem, setDeletingItem] = useState(false);
 
-  // Add this helper near the top of AdminDashboard (after the state declarations)
-const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
-  if (!items) return 0;
-  return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
-    const unitPrice = items[itemName]?.unitPrice || 0;
-    return total + qty * unitPrice;
-  }, 0);
-};
+  // Delete all pledges state
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+
+  // Helper to compute pledge total
+  const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
+    if (!items) return 0;
+    return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
+      const unitPrice = items[itemName]?.unitPrice || 0;
+      return total + qty * unitPrice;
+    }, 0);
+  };
 
   // CSV Export Function
   const downloadPledgesAsCSV = () => {
@@ -99,37 +103,37 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
     setTimeout(() => setMessage(""), 2000);
   };
 
-  // Seed PDF data (optional button)
+  // Seed PDF data
   const seedFromPDF = async () => {
     const pdfItems = {
-  rice: { required: 170, unit: "Kgs", unitPrice: 180 },
-  lentils: { required: 40, unit: "Kgs", unitPrice: 240 },
-  beans: { required: 30, unit: "Kgs", unitPrice: 180 },
-  maize_flour: { required: 20, unit: "Kgs", unitPrice: 100 },
-  dengu: { required: 15, unit: "Kgs", unitPrice: 180 },
-  chapati_flour: { required: 24, unit: "Kgs", unitPrice: 100 },
-  eggs: { required: 5, unit: "Trays", unitPrice: 450 },
-  vegetables: { required: 1, unit: "Lot", unitPrice: 1000 },
-  bread: { required: 120, unit: "Loaves", unitPrice: 60 },
-  milk: { required: 200, unit: "Packets", unitPrice: 60 },
-  uji_flour: { required: 5, unit: "Kgs", unitPrice: 100 },
-  mandazi: { required: 35, unit: "Kgs", unitPrice: 100 },
-  sugar: { required: 5, unit: "Kgs", unitPrice: 150 },
-  chocolate: { required: 1, unit: "lot", unitPrice: 400 },
-  cooking_oil: { required: 20, unit: "Liters", unitPrice: 300 },
-  nyanya: { required: 1, unit: "Lot", unitPrice: 2000 },
-  onions: { required: 1, unit: "Lot", unitPrice: 1000 },
-  additives: { required: 1, unit: "Lot", unitPrice: 500 },
-  cabbage: { required: 1, unit: "Lot", unitPrice: 500 },
-  melon: { required: 1, unit: "Lot", unitPrice: 3000 },
-  ndizi: { required: 1, unit: "Lot", unitPrice: 800 },
-  charcoal: { required: 1, unit: "Sack", unitPrice: 3000 },
-  gas: { required: 1, unit: "Lot", unitPrice: 2400 },
-  utensils_cleaning: { required: 1, unit: "Lot", unitPrice: 6000 },
-  catering_labour: { required: 1, unit: "Lot", unitPrice: 10000 },
-  bananas: { required: 1, unit: "Lot", unitPrice: 1500 },               // new from Excel
-  crafts_snack_station: { required: 1, unit: "Lot", unitPrice: 60000 }  // new from Excel
-};
+      rice: { required: 170, unit: "Kgs", unitPrice: 180 },
+      lentils: { required: 40, unit: "Kgs", unitPrice: 240 },
+      beans: { required: 30, unit: "Kgs", unitPrice: 180 },
+      maize_flour: { required: 20, unit: "Kgs", unitPrice: 100 },
+      dengu: { required: 15, unit: "Kgs", unitPrice: 180 },
+      chapati_flour: { required: 24, unit: "Kgs", unitPrice: 100 },
+      eggs: { required: 5, unit: "Trays", unitPrice: 450 },
+      vegetables: { required: 1, unit: "Lot", unitPrice: 1000 },
+      bread: { required: 120, unit: "Loaves", unitPrice: 60 },
+      milk: { required: 200, unit: "Packets", unitPrice: 60 },
+      uji_flour: { required: 5, unit: "Kgs", unitPrice: 100 },
+      mandazi: { required: 35, unit: "Kgs", unitPrice: 100 },
+      sugar: { required: 5, unit: "Kgs", unitPrice: 150 },
+      chocolate: { required: 1, unit: "lot", unitPrice: 400 },
+      cooking_oil: { required: 20, unit: "Liters", unitPrice: 300 },
+      nyanya: { required: 1, unit: "Lot", unitPrice: 2000 },
+      onions: { required: 1, unit: "Lot", unitPrice: 1000 },
+      additives: { required: 1, unit: "Lot", unitPrice: 500 },
+      cabbage: { required: 1, unit: "Lot", unitPrice: 500 },
+      melon: { required: 1, unit: "Lot", unitPrice: 3000 },
+      ndizi: { required: 1, unit: "Lot", unitPrice: 800 },
+      charcoal: { required: 1, unit: "Sack", unitPrice: 3000 },
+      gas: { required: 1, unit: "Lot", unitPrice: 2400 },
+      utensils_cleaning: { required: 1, unit: "Lot", unitPrice: 6000 },
+      catering_labour: { required: 1, unit: "Lot", unitPrice: 10000 },
+      bananas: { required: 1, unit: "Lot", unitPrice: 1500 },
+      crafts_snack_station: { required: 1, unit: "Lot", unitPrice: 60000 }
+    };
     const updates: Record<
       string,
       { required: number; unit: string; unitPrice: number; pledged: number }
@@ -142,6 +146,7 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
     refresh();
   };
 
+  // Edit handlers
   const handleEditClick = () => {
     if (!items) return;
     const current = Object.fromEntries(
@@ -233,7 +238,7 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
     }
   };
 
-  // Delete item function
+  // Delete item
   const handleDeleteItemClick = (itemName: string, itemKey: string) => {
     setItemToDelete({ name: itemName, key: itemKey });
     setShowDeleteItemModal(true);
@@ -244,12 +249,10 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
     setDeletingItem(true);
     try {
       const itemKey = itemToDelete.key;
-      // Check if any pledge contains this item
       const hasPledges = pledges.some((pledge) =>
         Object.keys(pledge.items).includes(itemKey),
       );
       if (hasPledges) {
-        // Ask for extra confirmation because pledges exist
         if (
           !window.confirm(
             `⚠️ Warning: This item has existing pledges. Deleting it will remove the item from all those pledges. Continue?`,
@@ -259,7 +262,6 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
           setDeletingItem(false);
           return;
         }
-        // Remove item from all pledges
         const updatePromises = pledges.map(async (pledge) => {
           if (pledge.items[itemKey]) {
             const newItems = { ...pledge.items };
@@ -270,11 +272,9 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
         });
         await Promise.all(updatePromises);
       }
-      // Delete the item node
       const itemRef = ref(database, `items/${itemKey}`);
       await remove(itemRef);
       setMessage(`✅ Item "${itemToDelete.name}" deleted successfully.`);
-      // Exit edit mode if open
       setEditMode(false);
       refresh();
     } catch (error) {
@@ -287,7 +287,27 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
     }
   };
 
-  // Open confirmation modals
+  // Delete all pledges
+  const handleDeleteAllClick = () => {
+    setShowDeleteAllModal(true);
+  };
+
+  const confirmDeleteAll = async () => {
+    setDeletingAll(true);
+    try {
+      const pledgesRef = ref(database, 'pledges');
+      await remove(pledgesRef);
+      setMessage("✅ All pledges deleted successfully.");
+      refresh();
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to delete all pledges.");
+    } finally {
+      setDeletingAll(false);
+      setShowDeleteAllModal(false);
+    }
+  };
+
   const openSaveConfirm = () => setShowSaveConfirmModal(true);
   const openAddConfirm = () => {
     if (!newItemName.trim()) {
@@ -432,14 +452,22 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
       <ItemSummaryCards />
 
       <div className="mt-8">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
           <h2 className="text-xl font-semibold">All Pledges</h2>
-          <button
-            onClick={downloadPledgesAsCSV}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1"
-          >
-            📥 Download CSV
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={downloadPledgesAsCSV}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1"
+            >
+              📥 Download CSV
+            </button>
+            <button
+              onClick={handleDeleteAllClick}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1"
+            >
+              🗑️ Delete All
+            </button>
+          </div>
         </div>
         <AdminPledgeTable />
       </div>
@@ -485,15 +513,9 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Confirm New Item</h3>
             <div className="space-y-2 mb-6">
-              <p>
-                <strong>Name:</strong> {newItemName}
-              </p>
-              <p>
-                <strong>Required:</strong> {newItemRequired} {newItemUnit}
-              </p>
-              <p>
-                <strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}
-              </p>
+              <p><strong>Name:</strong> {newItemName}</p>
+              <p><strong>Required:</strong> {newItemRequired} {newItemUnit}</p>
+              <p><strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}</p>
             </div>
             <div className="flex gap-3">
               <button
@@ -520,8 +542,7 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <h3 className="text-xl font-bold mb-4">Delete Item</h3>
             <p className="mb-2">
-              Are you sure you want to delete{" "}
-              <strong>“{itemToDelete.name}”</strong>?
+              Are you sure you want to delete <strong>“{itemToDelete.name}”</strong>?
             </p>
             {pledges.some((p) => p.items[itemToDelete.key]) && (
               <p className="text-red-600 text-sm mb-4">
@@ -547,21 +568,53 @@ const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
           </div>
         </div>
       )}
+
+      {/* Delete All Pledges Confirmation Modal */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-xl font-bold mb-4">Delete All Pledges</h3>
+            <p className="mb-2">
+              Are you sure you want to delete <strong>ALL</strong> pledges?
+            </p>
+            <p className="text-red-600 text-sm mb-4">
+              ⚠️ This action cannot be undone. All pledge records will be permanently removed.
+            </p>
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={confirmDeleteAll}
+                disabled={deletingAll}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded disabled:opacity-50"
+              >
+                {deletingAll ? "Deleting..." : "Yes, Delete All"}
+              </button>
+              <button
+                onClick={() => setShowDeleteAllModal(false)}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
-// Login & wrapper (unchanged)
+// Login & wrapper – FIXED: lazy initializer, no useEffect
 export default function AdminClient() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // ✅ Use state initializer to read sessionStorage (client‑only)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Guard against server‑side rendering
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(SESSION_KEY) === "true";
+    }
+    return false;
+  });
+
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored === "true") setIsAuthenticated(true);
-  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

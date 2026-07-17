@@ -184,7 +184,7 @@ export default function PledgeForm() {
       // Show success message with payment details
       setMessage(
         `✅ Pledge submitted successfully! Total: ${formatMoney(totalAmount)}\n\n` +
-          `💳 Payment Details:\nPaybill: 4029285\nAccount: VBX Food\n\n` +
+          `💳 Payment Details:\nPaybill: 4029285\nAccount: CAMP EXPENSES\n\n` +
           `Please complete payment via M-Pesa. Admin will confirm once received.`,
       );
       // Reset form
