@@ -100,7 +100,7 @@ export default async function HomePage({
           <p className="font-semibold text-gray-800 dark:text-gray-200">💰 Payment Details (for cash pledges)</p>
           <p className="text-gray-700 dark:text-gray-300 mt-1">
             Paybill: <strong className="text-blue-700 dark:text-blue-300">4029285</strong> | 
-            Account: <strong className="text-blue-700 dark:text-blue-300">VBX Food</strong>
+            Account: <strong className="text-blue-700 dark:text-blue-300">CAMP EXPENSES</strong>
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             After pledging, complete M-Pesa payment. Admin will mark as paid.
