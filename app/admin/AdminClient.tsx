@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { database } from "@/app/lib/firebase";
 import { ref, update, set, get, remove } from "firebase/database";
 import { RealTimeProvider, useRealTime } from "../components/RealTimeProvider";
 import ItemSummaryCards from "../components/ItemSummaryCards";
 import AdminPledgeTable from "../components/AdminPledgeTable";
+import { ItemsMap } from "@/app/types";
 
 const ADMIN_PASSWORD = "admin@2026";
 const SESSION_KEY = "admin_authenticated";
@@ -41,6 +42,9 @@ function AdminDashboard() {
   // Delete all pledges state
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
+
+  // Search state for filtering items
+  const [itemSearchTerm, setItemSearchTerm] = useState("");
 
   // Helper to compute pledge total
   const computePledgeTotal = (pledgeItems: {
@@ -290,9 +294,7 @@ function AdminDashboard() {
     setDeletingItem(true);
     try {
       const itemKey = itemToDelete.key;
-      const hasPledges = pledges.some((pledge) =>
-        Object.keys(pledge.items).includes(itemKey),
-      );
+      const hasPledges = pledges.some((pledge) => pledge.items && pledge.items[itemKey]);
       if (hasPledges) {
         if (
           !window.confirm(
@@ -304,7 +306,7 @@ function AdminDashboard() {
           return;
         }
         const updatePromises = pledges.map(async (pledge) => {
-          if (pledge.items[itemKey]) {
+          if (pledge.items && pledge.items[itemKey]) {
             const newItems = { ...pledge.items };
             delete newItems[itemKey];
             const pledgeRef = ref(database, `pledges/${pledge.id}`);
@@ -364,6 +366,22 @@ function AdminDashboard() {
     }
     setShowAddConfirmModal(true);
   };
+
+  // Filter items based on search term – using correct type
+  const getFilteredItems = (): ItemsMap => {
+    if (!items) return {};
+    if (!itemSearchTerm.trim()) return items;
+    const term = itemSearchTerm.toLowerCase().trim();
+    const filtered: ItemsMap = {};
+    Object.entries(items).forEach(([key, value]) => {
+      if (key.toLowerCase().includes(term)) {
+        filtered[key] = value;
+      }
+    });
+    return filtered;
+  };
+
+  const filteredItems = getFilteredItems();
 
   return (
     <>
@@ -458,39 +476,59 @@ function AdminDashboard() {
         </div>
       )}
 
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="🔍 Search items..."
+          value={itemSearchTerm}
+          onChange={(e) => setItemSearchTerm(e.target.value)}
+          className="w-full max-w-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        />
+        {itemSearchTerm && (
+          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+            {Object.keys(filteredItems).length} of {Object.keys(items || {}).length} items
+          </span>
+        )}
+      </div>
+
       {editMode && items && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 space-y-3">
-          {Object.entries(items).map(([name, config]) => (
-            <div key={name} className="flex flex-wrap items-center gap-4">
-              <label className="w-28 font-semibold capitalize">{name}</label>
-              <input
-                type="number"
-                value={editedItems[name]?.required ?? config.required}
-                onChange={(e) => handleRequiredChange(name, e.target.value)}
-                className="border rounded px-2 py-1 w-28 dark:bg-gray-700"
-              />
-              <span className="text-sm text-gray-500">{config.unit}</span>
-              <input
-                type="number"
-                step="0.01"
-                value={editedItems[name]?.unitPrice ?? config.unitPrice ?? 0}
-                onChange={(e) => handlePriceChange(name, e.target.value)}
-                placeholder="Unit price (KES)"
-                className="border rounded px-2 py-1 w-32 dark:bg-gray-700"
-              />
-              <button
-                onClick={() => handleDeleteItemClick(name, name)}
-                className="ml-auto text-red-600 hover:text-red-800"
-                aria-label="Delete item"
-              >
-                🗑️ Delete
-              </button>
-            </div>
-          ))}
+          {Object.keys(filteredItems).length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">No items match your search.</p>
+          ) : (
+            Object.entries(filteredItems).map(([name, config]) => (
+              <div key={name} className="flex flex-wrap items-center gap-4">
+                <label className="w-28 font-semibold capitalize">{name}</label>
+                <input
+                  type="number"
+                  value={editedItems[name]?.required ?? config.required}
+                  onChange={(e) => handleRequiredChange(name, e.target.value)}
+                  className="border rounded px-2 py-1 w-28 dark:bg-gray-700"
+                />
+                <span className="text-sm text-gray-500">{config.unit}</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editedItems[name]?.unitPrice ?? config.unitPrice ?? 0}
+                  onChange={(e) => handlePriceChange(name, e.target.value)}
+                  placeholder="Unit price (KES)"
+                  className="border rounded px-2 py-1 w-32 dark:bg-gray-700"
+                />
+                <button
+                  onClick={() => handleDeleteItemClick(name, name)}
+                  className="ml-auto text-red-600 hover:text-red-800"
+                  aria-label="Delete item"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            ))
+          )}
         </div>
       )}
 
-      <ItemSummaryCards />
+      <ItemSummaryCards searchTerm={itemSearchTerm} />
 
       <div className="mt-8">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
@@ -592,7 +630,7 @@ function AdminDashboard() {
               Are you sure you want to delete{" "}
               <strong>“{itemToDelete.name}”</strong>?
             </p>
-            {pledges.some((p) => p.items[itemToDelete.key]) && (
+            {pledges.some((p) => p.items && p.items[itemToDelete.key]) && (
               <p className="text-red-600 text-sm mb-4">
                 ⚠️ This item has existing pledges. Deleting it will remove the
                 item from all those pledges.
@@ -651,19 +689,22 @@ function AdminDashboard() {
   );
 }
 
-// Login & wrapper – FIXED: lazy initializer, no useEffect
+// Login & wrapper – uses useEffect to avoid hydration mismatch
 export default function AdminClient() {
-  // ✅ Use state initializer to read sessionStorage (client‑only)
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Guard against server‑side rendering
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem(SESSION_KEY) === "true";
-    }
-    return false;
-  });
-
+  // Initialize as false on both server and client to avoid hydration mismatch
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
+
+  // After mount, check sessionStorage and update state if authenticated
+  useEffect(() => {
+    // This setState call is safe because it runs after hydration and only once
+    if (typeof window !== "undefined") {
+      const stored = sessionStorage.getItem(SESSION_KEY) === "true";
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsAuthenticated(stored);
+    }
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

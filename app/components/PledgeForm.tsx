@@ -86,17 +86,18 @@ export default function PledgeForm() {
   const getRemaining = (itemName: string): number => {
     if (!items) return 0;
     const pledgedTotal = pledges.reduce(
-      (sum, p) => sum + (p.items[itemName] || 0),
+      (sum, p) => sum + (p.items?.[itemName] || 0), // ✅ Guard against undefined p.items
       0,
     );
-    // Allow negative (over-pledged)
+    // If the item doesn't exist in items, return 0
+    if (!items[itemName]) return 0;
     return items[itemName].required - pledgedTotal;
   };
 
   const getRemainingCash = (itemName: string): number => {
     if (!items) return 0;
     const remainingQty = getRemaining(itemName);
-    const unitPrice = items[itemName].unitPrice || 0;
+    const unitPrice = items[itemName]?.unitPrice || 0;
     return remainingQty * unitPrice;
   };
 
@@ -185,7 +186,7 @@ export default function PledgeForm() {
       setMessage(
         `✅ Pledge submitted successfully! Total: ${formatMoney(totalAmount)}\n\n` +
           `💳 Payment Details:\nPaybill: 4029285\nAccount: CAMP EXPENSES\n\n` +
-          `Please complete payment via M-Pesa. Admin will confirm once received.`,
+          `Please complete payment via M-Pesa. Camp Accountant will confirm once received.`,
       );
       // Reset form
       setMemberName("");
@@ -215,10 +216,10 @@ export default function PledgeForm() {
     if (!matchesSearch) return false;
 
     const pledgedTotal = pledges.reduce(
-      (sum, p) => sum + (p.items[name] || 0),
+      (sum, p) => sum + (p.items?.[name] || 0), // ✅ Guard against undefined p.items
       0,
     );
-    const remaining = items[name].required - pledgedTotal;
+    const remaining = items[name]?.required - pledgedTotal;
     const hasPledges = pledgedTotal > 0;
     const isPending = remaining > 0;
 
@@ -370,7 +371,7 @@ export default function PledgeForm() {
             const remaining = getRemaining(name);
             const remainingCash = getRemainingCash(name);
             const pledgedTotal = pledges.reduce(
-              (sum, p) => sum + (p.items[name] || 0),
+              (sum, p) => sum + (p.items?.[name] || 0), // ✅ Guard against undefined p.items
               0,
             );
             const percentFilled = (pledgedTotal / config.required) * 100;

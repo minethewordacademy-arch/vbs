@@ -56,7 +56,6 @@ export default function AdminPledgeTable() {
     setProcessingPayment(true);
     try {
       await update(ref(database), { [`pledges/${pendingPaymentId}/paymentStatus`]: 'paid' });
-      // Optional: show success message (could be a toast, but we'll rely on the UI update)
     } catch (error) {
       console.error("Failed to update payment status:", error);
       alert("Error updating status. Try again.");
@@ -75,7 +74,7 @@ export default function AdminPledgeTable() {
   if (!pledges.length) return <p className="text-gray-500">No pledges yet.</p>;
 
   const computePledgeTotal = (pledgeItems: { [key: string]: number }): number => {
-    if (!items) return 0;
+    if (!items || !pledgeItems) return 0;
     return Object.entries(pledgeItems).reduce((total, [itemName, qty]) => {
       const unitPrice = items[itemName]?.unitPrice || 0;
       return total + qty * unitPrice;
@@ -99,14 +98,16 @@ export default function AdminPledgeTable() {
           </thead>
           <tbody>
             {pledges.map((pledge) => {
-              const totalValue = computePledgeTotal(pledge.items);
+              // ✅ Guard: if pledge.items is undefined or null, treat as empty object
+              const safeItems = pledge.items || {};
+              const totalValue = computePledgeTotal(safeItems);
               const isPaid = pledge.paymentStatus === "paid";
               return (
                 <tr key={pledge.id} className="border-t dark:border-gray-700">
                   <td className="px-4 py-2">{pledge.memberName}</td>
                   <td className="px-4 py-2">{pledge.phone}</td>
                   <td className="px-4 py-2">
-                    {Object.entries(pledge.items)
+                    {Object.entries(safeItems)
                       .filter(([, qty]) => qty > 0)
                       .map(([itemName, qty]) => {
                         const unitPrice = items?.[itemName]?.unitPrice || 0;

@@ -1,5 +1,6 @@
 import { RealTimeProvider } from "./components/RealTimeProvider";
 import PledgeForm from "./components/PledgeForm";
+import DateTimeDisplay from "./components/DateTimeDisplay";
 import { Metadata } from "next";
 
 type CampaignInfo = {
@@ -83,14 +84,19 @@ export default async function HomePage({
   const titleColorClass = colorClassMap[info.themeColor] || "text-blue-600";
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 sm:py-10 sm:px-6">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-6">
-          <h1 className={`text-3xl font-bold mb-2 ${titleColorClass}`}>
+        {/* Header with date/time */}
+        <div className="text-center mb-8">
+          <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${titleColorClass}`}>
             {info.title}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">{info.description}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            {info.description}
+          </p>
+          <DateTimeDisplay />
         </div>
+
         <RealTimeProvider>
           <PledgeForm />
         </RealTimeProvider>
@@ -103,7 +109,7 @@ export default async function HomePage({
             Account: <strong className="text-blue-700 dark:text-blue-300">CAMP EXPENSES</strong>
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            After pledging, complete M-Pesa payment. Admin will mark as paid.
+            After pledging, complete M‑Pesa payment. Admin will mark as paid.
           </p>
         </div>
       </div>

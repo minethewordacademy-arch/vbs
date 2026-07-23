@@ -2,23 +2,39 @@
 
 import { useRealTime } from "./RealTimeProvider";
 
-export default function ItemSummaryCards() {
+interface ItemSummaryCardsProps {
+  searchTerm?: string;
+}
+
+export default function ItemSummaryCards({ searchTerm = "" }: ItemSummaryCardsProps) {
   const { items, pledges } = useRealTime();
   if (!items) return null;
 
   const pledgedTotals: { [key: string]: number } = {};
   pledges.forEach((pledge) => {
-    Object.entries(pledge.items).forEach(([item, qty]) => {
-      pledgedTotals[item] = (pledgedTotals[item] || 0) + qty;
-    });
+    if (pledge.items && typeof pledge.items === 'object') {
+      Object.entries(pledge.items).forEach(([item, qty]) => {
+        pledgedTotals[item] = (pledgedTotals[item] || 0) + qty;
+      });
+    }
   });
 
   const formatMoney = (value: number) =>
     `KES ${value.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
 
+  // Filter items based on search term
+  const filteredEntries = Object.entries(items).filter(([name]) => {
+    if (!searchTerm.trim()) return true;
+    return name.toLowerCase().includes(searchTerm.toLowerCase().trim());
+  });
+
+  if (filteredEntries.length === 0) {
+    return <p className="text-gray-500 dark:text-gray-400">No items match your search.</p>;
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-      {Object.entries(items).map(([name, config]) => {
+      {filteredEntries.map(([name, config]) => {
         const pledged = pledgedTotals[name] || 0;
         const remaining = config.required - pledged;
         const percent = (pledged / config.required) * 100;
