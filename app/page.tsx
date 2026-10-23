@@ -37,11 +37,12 @@ const campaigns: Record<string, CampaignInfo> = {
   },
 };
 
+// ✨ ADDED DARK MODE CLASSES TO THE COLOR MAP ✨
 const colorClassMap: Record<string, string> = {
-  blue: "text-blue-600",
-  green: "text-green-600",
-  yellow: "text-yellow-600",
-  purple: "text-purple-600",
+  blue: "text-blue-600 dark:text-blue-400",
+  green: "text-green-600 dark:text-green-400",
+  yellow: "text-yellow-600 dark:text-yellow-400",
+  purple: "text-purple-600 dark:text-purple-400",
 };
 
 export async function generateMetadata({
@@ -81,10 +82,11 @@ export default async function HomePage({
 }) {
   const { campaign } = await searchParams;
   const info = campaign && campaigns[campaign] ? campaigns[campaign] : campaigns.default;
-  const titleColorClass = colorClassMap[info.themeColor] || "text-blue-600";
+  const titleColorClass = colorClassMap[info.themeColor] || "text-blue-600 dark:text-blue-400";
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 sm:py-10 sm:px-6">
+    // ✨ REMOVED min-h-screen & bg classes TO LET THE LAYOUT HANDLE IT ✨
+    <div className="w-full flex-1 py-6 px-4 sm:py-10 sm:px-6">
       <div className="max-w-2xl mx-auto">
         {/* Header with date/time */}
         <div className="text-center mb-8">
@@ -101,18 +103,25 @@ export default async function HomePage({
           <PledgeForm />
         </RealTimeProvider>
 
-        {/* Payment Details Footer */}
-        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-center text-sm border border-blue-200 dark:border-blue-800">
-          <p className="font-semibold text-gray-800 dark:text-gray-200">💰 Payment Details (for cash pledges)</p>
-          <p className="text-gray-700 dark:text-gray-300 mt-1">
-            Paybill: <strong className="text-blue-700 dark:text-blue-300">4029285</strong> | 
-            Account: <strong className="text-blue-700 dark:text-blue-300">Mission2026</strong>
+                {/* Payment Details Footer */}
+        <div className="mt-8 p-5 bg-blue-50 dark:bg-blue-950 rounded-xl text-center border border-blue-200 dark:border-blue-900 shadow-sm transition-colors duration-300">
+          <p className="font-bold text-gray-800 dark:text-blue-100 text-base mb-2">
+            💰 Payment Details (for cash pledges)
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <div className="text-gray-700 dark:text-gray-300 flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
+            <span>
+              Paybill: <strong className="text-blue-700 dark:text-blue-400 text-lg font-bold tracking-wide">4029285</strong>
+            </span>
+            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">|</span>
+            <span>
+              Account: <strong className="text-blue-700 dark:text-blue-400 text-lg font-bold tracking-wide">Mission2026</strong>
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
             After pledging, complete M‑Pesa payment. Admin will mark as paid.
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

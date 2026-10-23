@@ -112,7 +112,6 @@ function AdminDashboard() {
   // Seed PDF data – perfectly matched to Khaoya Mission 2026
   const seedFromPDF = async () => {
     const pdfItems = {
-      // --- A. Food Budget ---
       milk: { required: 21, unit: "Cartons", unitPrice: 770 },
       eggs: { required: 20, unit: "Trays", unitPrice: 450 },
       butter_beans: { required: 13, unit: "Kgs", unitPrice: 200 },
@@ -136,14 +135,11 @@ function AdminDashboard() {
       ingredients: { required: 1, unit: "Lot", unitPrice: 18110 },
       kamande: { required: 21, unit: "Kgs", unitPrice: 196 },
       fruits: { required: 1, unit: "Lot", unitPrice: 10270 },
-
-      // --- B. Literature Materials ---
       steps_to_christ: { required: 120, unit: "Pcs", unitPrice: 100 },
       nyimbo_za_kristo: { required: 120, unit: "Pcs", unitPrice: 500 },
       bibles: { required: 50, unit: "Pcs", unitPrice: 1100 },
     };
 
-    // Create a brand new object mapping the exact structure we need
     const newItems: Record<
       string,
       { required: number; unit: string; unitPrice: number; pledged: number }
@@ -153,7 +149,6 @@ function AdminDashboard() {
     }
 
     try {
-      // USING SET() INSTEAD OF UPDATE() WILL COMPLETELY OVERWRITE AND REMOVE OLD DATA
       await set(ref(database, "items"), newItems);
       setMessage("✅ Khaoya Mission 2026 budget data seeded successfully! (Old data removed)");
       refresh();
@@ -358,24 +353,24 @@ function AdminDashboard() {
   return (
     <>
       <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold">Item Summary</h2>
-        <div className="flex gap-2">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Item Summary</h2>
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setShowAddItem(!showAddItem)}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm"
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
           >
             + Add New Item
           </button>
           <button
             onClick={seedFromPDF}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
           >
             📦 Seed PDF Data
           </button>
           {!editMode ? (
             <button
               onClick={handleEditClick}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-sm"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
             >
               Edit Required & Prices
             </button>
@@ -384,13 +379,13 @@ function AdminDashboard() {
               <button
                 onClick={openSaveConfirm}
                 disabled={saving}
-                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm"
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
               <button
                 onClick={() => setEditMode(false)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-md text-sm"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
               >
                 Cancel
               </button>
@@ -401,27 +396,27 @@ function AdminDashboard() {
 
       {/* Add Item Form */}
       {showAddItem && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow">
-          <h3 className="font-semibold mb-3">Add New Item</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow border border-gray-200 dark:border-gray-700 transition-colors">
+          <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Add New Item</h3>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             <input
               type="text"
               placeholder="Item name (e.g., Maize Flour)"
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
-              className="border rounded px-2 py-1 dark:bg-gray-700"
+              className="border rounded px-2 py-1 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
             />
             <input
               type="number"
               placeholder="Required quantity"
               value={newItemRequired}
               onChange={(e) => setNewItemRequired(e.target.value)}
-              className="border rounded px-2 py-1 dark:bg-gray-700"
+              className="border rounded px-2 py-1 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
             />
             <select
               value={newItemUnit}
               onChange={(e) => setNewItemUnit(e.target.value)}
-              className="border rounded px-2 py-1 dark:bg-gray-700"
+              className="border rounded px-2 py-1 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
             >
               <option value="kg">kg</option>
               <option value="g">g</option>
@@ -435,12 +430,12 @@ function AdminDashboard() {
               placeholder="Unit price (KES)"
               value={newItemPrice}
               onChange={(e) => setNewItemPrice(e.target.value)}
-              className="border rounded px-2 py-1 dark:bg-gray-700"
+              className="border rounded px-2 py-1 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
             />
             <button
               onClick={openAddConfirm}
               disabled={addingItem}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md transition-colors"
             >
               {addingItem ? "Adding..." : "Add Item"}
             </button>
@@ -455,7 +450,7 @@ function AdminDashboard() {
           placeholder="🔍 Search items..."
           value={itemSearchTerm}
           onChange={(e) => setItemSearchTerm(e.target.value)}
-          className="w-full max-w-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          className="w-full max-w-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
         />
         {itemSearchTerm && (
           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
@@ -465,31 +460,31 @@ function AdminDashboard() {
       </div>
 
       {editMode && items && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 space-y-3">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 space-y-3 shadow border border-gray-200 dark:border-gray-700 transition-colors">
           {Object.keys(filteredItems).length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No items match your search.</p>
           ) : (
             Object.entries(filteredItems).map(([name, config]) => (
               <div key={name} className="flex flex-wrap items-center gap-4">
-                <label className="w-28 font-semibold capitalize">{name}</label>
+                <label className="w-28 font-semibold capitalize text-gray-800 dark:text-gray-200">{name}</label>
                 <input
                   type="number"
                   value={editedItems[name]?.required ?? config.required}
                   onChange={(e) => handleRequiredChange(name, e.target.value)}
-                  className="border rounded px-2 py-1 w-28 dark:bg-gray-700"
+                  className="border rounded px-2 py-1 w-28 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                 />
-                <span className="text-sm text-gray-500">{config.unit}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{config.unit}</span>
                 <input
                   type="number"
                   step="0.01"
                   value={editedItems[name]?.unitPrice ?? config.unitPrice ?? 0}
                   onChange={(e) => handlePriceChange(name, e.target.value)}
                   placeholder="Unit price (KES)"
-                  className="border rounded px-2 py-1 w-32 dark:bg-gray-700"
+                  className="border rounded px-2 py-1 w-32 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                 />
                 <button
                   onClick={() => handleDeleteItemClick(name, name)}
-                  className="ml-auto text-red-600 hover:text-red-800"
+                  className="ml-auto text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
                   aria-label="Delete item"
                 >
                   🗑️ Delete
@@ -504,17 +499,17 @@ function AdminDashboard() {
 
       <div className="mt-8">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-          <h2 className="text-xl font-semibold">All Pledges</h2>
-          <div className="flex gap-2">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">All Pledges</h2>
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={downloadPledgesAsCSV}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1 transition-colors"
             >
               📥 Download CSV
             </button>
             <button
               onClick={handleDeleteAllClick}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1"
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-1 transition-colors"
             >
               🗑️ Delete All
             </button>
@@ -524,17 +519,17 @@ function AdminDashboard() {
       </div>
 
       {message && (
-        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow z-50">
+        <div className="fixed bottom-4 right-4 bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded shadow z-50 border border-gray-600">
           {message}
         </div>
       )}
 
-      {/* Save Confirmation Modal */}
+      {/* Modals */}
       {showSaveConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-xl font-bold mb-4">Confirm Changes</h3>
-            <p className="mb-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl border border-gray-200 dark:border-gray-700 transition-colors">
+            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Confirm Changes</h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">
               Are you sure you want to update the required quantities and prices
               for all items? This action cannot be undone immediately (you can
               edit again).
@@ -543,13 +538,13 @@ function AdminDashboard() {
               <button
                 onClick={saveRequiredQuantities}
                 disabled={saving}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded transition-colors"
               >
                 Yes, Save
               </button>
               <button
                 onClick={() => setShowSaveConfirmModal(false)}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded transition-colors"
               >
                 Cancel
               </button>
@@ -558,33 +553,26 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Add Item Confirmation Modal */}
       {showAddConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-xl font-bold mb-4">Confirm New Item</h3>
-            <div className="space-y-2 mb-6">
-              <p>
-                <strong>Name:</strong> {newItemName}
-              </p>
-              <p>
-                <strong>Required:</strong> {newItemRequired} {newItemUnit}
-              </p>
-              <p>
-                <strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}
-              </p>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl border border-gray-200 dark:border-gray-700 transition-colors">
+            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Confirm New Item</h3>
+            <div className="space-y-2 mb-6 text-gray-700 dark:text-gray-300">
+              <p><strong>Name:</strong> {newItemName}</p>
+              <p><strong>Required:</strong> {newItemRequired} {newItemUnit}</p>
+              <p><strong>Unit Price:</strong> KES {parseFloat(newItemPrice) || 0}</p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={handleAddItem}
                 disabled={addingItem}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded transition-colors"
               >
                 {addingItem ? "Adding..." : "Yes, Add Item"}
               </button>
               <button
                 onClick={() => setShowAddConfirmModal(false)}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded transition-colors"
               >
                 Cancel
               </button>
@@ -593,17 +581,15 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Delete Item Confirmation Modal */}
       {showDeleteItemModal && itemToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-xl font-bold mb-4">Delete Item</h3>
-            <p className="mb-2">
-              Are you sure you want to delete{" "}
-              <strong>“{itemToDelete.name}”</strong>?
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl border border-gray-200 dark:border-gray-700 transition-colors">
+            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Delete Item</h3>
+            <p className="mb-2 text-gray-700 dark:text-gray-300">
+              Are you sure you want to delete <strong>“{itemToDelete.name}”</strong>?
             </p>
             {pledges.some((p) => p.items && p.items[itemToDelete.key]) && (
-              <p className="text-red-600 text-sm mb-4">
+              <p className="text-red-600 dark:text-red-400 text-sm mb-4">
                 ⚠️ This item has existing pledges. Deleting it will remove the
                 item from all those pledges.
               </p>
@@ -612,13 +598,13 @@ function AdminDashboard() {
               <button
                 onClick={confirmDeleteItem}
                 disabled={deletingItem}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded disabled:opacity-50"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded disabled:opacity-50 transition-colors"
               >
                 {deletingItem ? "Deleting..." : "Yes, Delete"}
               </button>
               <button
                 onClick={() => setShowDeleteItemModal(false)}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded transition-colors"
               >
                 Cancel
               </button>
@@ -627,15 +613,14 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Delete All Pledges Confirmation Modal */}
       {showDeleteAllModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-xl font-bold mb-4">Delete All Pledges</h3>
-            <p className="mb-2">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl border border-gray-200 dark:border-gray-700 transition-colors">
+            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Delete All Pledges</h3>
+            <p className="mb-2 text-gray-700 dark:text-gray-300">
               Are you sure you want to delete <strong>ALL</strong> pledges?
             </p>
-            <p className="text-red-600 text-sm mb-4">
+            <p className="text-red-600 dark:text-red-400 text-sm mb-4">
               ⚠️ This action cannot be undone. All pledge records will be
               permanently removed.
             </p>
@@ -643,13 +628,13 @@ function AdminDashboard() {
               <button
                 onClick={confirmDeleteAll}
                 disabled={deletingAll}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded disabled:opacity-50"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded disabled:opacity-50 transition-colors"
               >
                 {deletingAll ? "Deleting..." : "Yes, Delete All"}
               </button>
               <button
                 onClick={() => setShowDeleteAllModal(false)}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded transition-colors"
               >
                 Cancel
               </button>
@@ -661,16 +646,12 @@ function AdminDashboard() {
   );
 }
 
-// Login & wrapper – uses useEffect to avoid hydration mismatch
 export default function AdminClient() {
-  // Initialize as false on both server and client to avoid hydration mismatch
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
 
-  // After mount, check sessionStorage and update state if authenticated
   useEffect(() => {
-    // This setState call is safe because it runs after hydration and only once
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem(SESSION_KEY) === "true";
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -697,22 +678,22 @@ export default function AdminClient() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-sm">
-          <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-sm border border-gray-200 dark:border-gray-700 transition-colors">
+          <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Admin Login</h1>
           <form onSubmit={handleLogin}>
             <input
               type="password"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
               placeholder="Enter password"
-              className="w-full border rounded px-3 py-2 mb-4 dark:bg-gray-700"
+              className="w-full border rounded px-3 py-2 mb-4 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
             {authError && (
-              <p className="text-red-600 text-sm mb-4">{authError}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mb-4">{authError}</p>
             )}
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded">
+            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition-colors">
               Login
             </button>
           </form>
@@ -722,13 +703,13 @@ export default function AdminClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
           <button
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm"
+            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
           >
             Logout
           </button>

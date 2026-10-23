@@ -86,10 +86,9 @@ export default function PledgeForm() {
   const getRemaining = (itemName: string): number => {
     if (!items) return 0;
     const pledgedTotal = pledges.reduce(
-      (sum, p) => sum + (p.items?.[itemName] || 0), // ✅ Guard against undefined p.items
+      (sum, p) => sum + (p.items?.[itemName] || 0),
       0,
     );
-    // If the item doesn't exist in items, return 0
     if (!items[itemName]) return 0;
     return items[itemName].required - pledgedTotal;
   };
@@ -152,7 +151,6 @@ export default function PledgeForm() {
     setSubmitting(true);
     setMessage("");
 
-    // Calculate total amount from selected items
     let totalAmount = 0;
     for (const [itemName, qty] of Object.entries(selectedItems)) {
       if (qty > 0 && items?.[itemName]?.unitPrice) {
@@ -167,7 +165,7 @@ export default function PledgeForm() {
         items: selectedItems,
         timestamp: new Date().toISOString(),
         totalAmount: totalAmount,
-        paymentStatus: "pending", // default
+        paymentStatus: "pending",
       };
       const pledgesRef = ref(database, "pledges");
       await push(pledgesRef, pledgeData);
@@ -182,13 +180,12 @@ export default function PledgeForm() {
         }),
       );
 
-      // Show success message with payment details
       setMessage(
         `✅ Pledge submitted successfully! Total: ${formatMoney(totalAmount)}\n\n` +
           `💳 Payment Details:\nPaybill: 4029285\nAccount: Mission2026\n\n` +
           `Please complete payment via M-Pesa. Camp Accountant will confirm once received.`,
       );
-      // Reset form
+      
       setMemberName("");
       setPhone("");
       setNameError("");
@@ -209,14 +206,14 @@ export default function PledgeForm() {
     }
   };
 
-  if (!items) return <div className="text-center py-10">Loading...</div>;
+  if (!items) return <div className="text-center py-10 text-gray-600 dark:text-gray-300">Loading...</div>;
 
   const filteredItems = Object.entries(items).filter(([name]) => {
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
 
     const pledgedTotal = pledges.reduce(
-      (sum, p) => sum + (p.items?.[name] || 0), // ✅ Guard against undefined p.items
+      (sum, p) => sum + (p.items?.[name] || 0),
       0,
     );
     const remaining = items[name]?.required - pledgedTotal;
@@ -239,7 +236,7 @@ export default function PledgeForm() {
     <>
       <form
         onSubmit={handleFormSubmit}
-        className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 space-y-5 border border-gray-200 dark:border-gray-700"
+        className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 space-y-5 border border-gray-200 dark:border-gray-700 transition-colors duration-300"
       >
         <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
           ✨ Make a Pledge ✨
@@ -253,7 +250,7 @@ export default function PledgeForm() {
             type="text"
             value={memberName}
             onChange={(e) => handleNameChange(e.target.value)}
-            className={`w-full rounded-lg border-2 p-3 text-base ${
+            className={`w-full rounded-lg border-2 p-3 text-base text-gray-900 dark:text-white ${
               nameError
                 ? "border-red-500"
                 : "border-gray-300 dark:border-gray-600"
@@ -273,7 +270,7 @@ export default function PledgeForm() {
             type="tel"
             value={phone}
             onChange={(e) => handlePhoneChange(e.target.value)}
-            className={`w-full rounded-lg border-2 p-3 text-base ${
+            className={`w-full rounded-lg border-2 p-3 text-base text-gray-900 dark:text-white ${
               phoneError
                 ? "border-red-500"
                 : "border-gray-300 dark:border-gray-600"
@@ -283,7 +280,7 @@ export default function PledgeForm() {
           {phoneError && (
             <p className="text-red-500 text-sm mt-1">{phoneError}</p>
           )}
-          <p className="text-gray-500 text-xs mt-1">
+          <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
             Enter exactly 10 digits (e.g., 0712345678)
           </p>
         </div>
@@ -299,13 +296,13 @@ export default function PledgeForm() {
               placeholder="Search items..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-base"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base transition-colors"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 ✕
               </button>
@@ -313,7 +310,7 @@ export default function PledgeForm() {
           </div>
 
           <div className="flex gap-3 justify-center flex-wrap">
-            <label className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-sm font-medium cursor-pointer">
+            <label className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={showOnlyPledged}
@@ -322,7 +319,7 @@ export default function PledgeForm() {
               />
               With pledges
             </label>
-            <label className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-sm font-medium cursor-pointer">
+            <label className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={showOnlyPending}
@@ -335,7 +332,7 @@ export default function PledgeForm() {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="px-3 py-2 rounded-full bg-gray-200 dark:bg-gray-600 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                className="px-3 py-2 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
               >
                 ✖ Clear filters
               </button>
@@ -344,14 +341,14 @@ export default function PledgeForm() {
         </div>
 
         {/* Filter stats */}
-        <div className="flex justify-between items-center text-xs text-gray-500 px-1">
+        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 px-1">
           <span>
             Showing {filteredItems.length} of {Object.keys(items).length} items
           </span>
           {(searchTerm || showOnlyPledged || showOnlyPending) && (
             <button
               onClick={clearAllFilters}
-              className="text-blue-500 hover:text-blue-700"
+              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               Reset all
             </button>
@@ -363,7 +360,7 @@ export default function PledgeForm() {
           className="space-y-4 max-h-[60vh] overflow-y-auto pr-1"
         >
           {filteredItems.length === 0 && (
-            <p className="text-gray-500 text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
               No items match your filters.
             </p>
           )}
@@ -371,7 +368,7 @@ export default function PledgeForm() {
             const remaining = getRemaining(name);
             const remainingCash = getRemainingCash(name);
             const pledgedTotal = pledges.reduce(
-              (sum, p) => sum + (p.items?.[name] || 0), // ✅ Guard against undefined p.items
+              (sum, p) => sum + (p.items?.[name] || 0),
               0,
             );
             const percentFilled = (pledgedTotal / config.required) * 100;
@@ -382,18 +379,18 @@ export default function PledgeForm() {
             return (
               <div
                 key={name}
-                className="rounded-xl border-l-8 border-l-blue-500 bg-white dark:bg-gray-800 shadow p-4"
+                className="rounded-xl border-l-8 border-l-blue-500 bg-white dark:bg-gray-800 shadow-sm p-4 transition-colors duration-300"
               >
                 <div className="flex justify-between items-start gap-2 mb-2 flex-wrap">
                   <h3 className="text-lg font-bold capitalize text-gray-800 dark:text-white">
                     {name}
                   </h3>
-                  <span className="text-xs font-semibold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">
+                  <span className="text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">
                     Required: {config.required} {config.unit}
                   </span>
                 </div>
 
-                <div className="flex justify-between text-sm mb-1">
+                <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
                   <span>
                     📦 Pledged: {pledgedTotal.toFixed(2)} {config.unit}
                   </span>
@@ -401,11 +398,11 @@ export default function PledgeForm() {
                     🎯 Remaining: {remaining.toFixed(2)} {config.unit}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
                   <span>💰 Unit: {formatMoney(unitPrice)}</span>
                   <span>💵 Remaining cash: {formatMoney(remainingCash)}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
                   <div
                     className="bg-linear-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(percentFilled, 100)}%` }}
@@ -416,10 +413,10 @@ export default function PledgeForm() {
                   <button
                     type="button"
                     onClick={() => handleModeChange(name, "quantity")}
-                    className={`flex-1 text-sm py-2 px-3 rounded-lg font-medium ${
+                    className={`flex-1 text-sm py-2 px-3 rounded-lg font-medium transition-colors ${
                       currentMode === "quantity"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     📦 Quantity
@@ -427,10 +424,10 @@ export default function PledgeForm() {
                   <button
                     type="button"
                     onClick={() => handleModeChange(name, "cash")}
-                    className={`flex-1 text-sm py-2 px-3 rounded-lg font-medium ${
+                    className={`flex-1 text-sm py-2 px-3 rounded-lg font-medium transition-colors ${
                       currentMode === "cash"
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        ? "bg-green-600 text-white shadow-sm"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     💰 Cash
@@ -445,7 +442,7 @@ export default function PledgeForm() {
                     value={selectedItems[name] || ""}
                     onChange={(e) => handleQuantityChange(name, e.target.value)}
                     placeholder={`Quantity (any amount allowed)`}
-                    className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-3 text-base"
+                    className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-3 text-base transition-colors"
                   />
                 ) : (
                   <div>
@@ -456,10 +453,10 @@ export default function PledgeForm() {
                       value={cashValue}
                       onChange={(e) => handleCashChange(name, e.target.value)}
                       placeholder={`Amount (any amount allowed)`}
-                      className="w-full rounded-lg border-2 border-green-500 dark:border-green-600 bg-white dark:bg-gray-700 p-3 text-base"
+                      className="w-full rounded-lg border-2 border-green-500 dark:border-green-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-3 text-base transition-colors"
                     />
                     {cashValue && unitPrice > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         ≈ {(parseFloat(cashValue) / unitPrice).toFixed(2)}{" "}
                         {config.unit}
                       </p>
@@ -475,8 +472,8 @@ export default function PledgeForm() {
           <div
             className={`p-3 rounded-xl text-center font-semibold ${
               message.includes("✅")
-                ? "bg-green-100 text-green-800 border-l-8 border-green-500"
-                : "bg-red-100 text-red-800 border-l-8 border-red-500"
+                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-l-8 border-green-500"
+                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-l-8 border-red-500"
             }`}
           >
             {message}
@@ -501,7 +498,7 @@ export default function PledgeForm() {
             className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-blue-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-linear-to-r from-blue-700 to-purple-700 mb-4">
+            <h3 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-linear-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400 mb-4">
               Confirm Your Pledge
             </h3>
             <div className="space-y-2 mb-6 text-gray-700 dark:text-gray-200">
