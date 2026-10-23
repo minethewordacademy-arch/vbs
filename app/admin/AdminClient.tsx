@@ -109,86 +109,58 @@ function AdminDashboard() {
     setTimeout(() => setMessage(""), 2000);
   };
 
-  // Seed PDF data – updated with 2026 Camp Meeting Budget
+  // Seed PDF data – perfectly matched to Khaoya Mission 2026
   const seedFromPDF = async () => {
     const pdfItems = {
-      // --- Catering Items ---
-      beans: { required: 160, unit: "kg", unitPrice: 140 },
-      eggs: { required: 25, unit: "Trays", unitPrice: 450 },
-      lentils: { required: 43, unit: "kg", unitPrice: 220 },
-      white_kunde: { required: 30, unit: "kg", unitPrice: 130 },
-      red_kunde: { required: 40, unit: "kg", unitPrice: 140 },
-      dengu: { required: 60, unit: "kg", unitPrice: 155 },
-      maize_meal_flour: { required: 164, unit: "kg", unitPrice: 75 },
-      brown_flour: { required: 70, unit: "kg", unitPrice: 120 },
-      wheat_flour_exe: { required: 26, unit: "packet", unitPrice: 187 },
-      atta_mark_1: { required: 12, unit: "packet", unitPrice: 200 },
-      rice_sunrice: { required: 405, unit: "kgs", unitPrice: 160 },
-      prestige_or_blue_band: { required: 6, unit: "kg", unitPrice: 400 },
-      salt_kensalt: { required: 6, unit: "packet", unitPrice: 70 },
-      salad_oil_golden_fry: { required: 10.5, unit: "Liters", unitPrice: 2500 },
-      white_pepper: { required: 25, unit: "Jar(100g)", unitPrice: 70 },
-      black_pepper: { required: 33, unit: "Jar(100g)", unitPrice: 28 },
-      tomato_paste: { required: 21, unit: "Tin(3.3)", unitPrice: 100 },
-      mixed_spices: { required: 2, unit: "Tin", unitPrice: 200 },
-      soy_sauce: { required: 2, unit: "Bottle(750ml)", unitPrice: 245 },
-      self_raising_exe: { required: 24, unit: "packet", unitPrice: 208 },
-      bananas: { required: 100, unit: "kgs", unitPrice: 60 },
-      garam_masala: { required: 2, unit: "Tin", unitPrice: 200 },
-      vinegar_white: { required: 1, unit: "700mls", unitPrice: 350 },
-      mala_milk: { required: 10, unit: "1Ltr", unitPrice: 165 },
-      milk_longlife: { required: 28, unit: "ctn", unitPrice: 620 },
-      bread_pieces: { required: 30, unit: "pieces", unitPrice: 140 },
-      sugar: { required: 50, unit: "kg", unitPrice: 160 },
-      soya_grams: { required: 1, unit: "kg", unitPrice: 450 },
-      drinking_chocolate: { required: 10, unit: "Grams(200)", unitPrice: 450 },
-      toothpicks: { required: 12, unit: "jar", unitPrice: 70 },
-      serviettes: { required: 36, unit: "packet", unitPrice: 100 },
-      foil_paper: { required: 2, unit: "rolls", unitPrice: 1500 },
-      paper_towels: { required: 6, unit: "rolls", unitPrice: 120 },
-      bio_gel: { required: 24, unit: "bottle", unitPrice: 170 },
-      bar_soap_menengai: { required: 6, unit: "kg", unitPrice: 155 },
-      detergent: { required: 3, unit: "kg", unitPrice: 245 },
-      moto_sawa_gel: { required: 3, unit: "5 litre", unitPrice: 1350 },
-      steel_wool: { required: 2, unit: "bale", unitPrice: 200 },
-      corn_pieces: { required: 4, unit: "pieces", unitPrice: 168 },
-      scotch_brite_heavy: { required: 12, unit: "pieces", unitPrice: 40 },
-      spontex: { required: 2, unit: "pieces", unitPrice: 100 },
-      cling_film: { required: 2, unit: "pieces", unitPrice: 750 },
-      tomatoes_carton: { required: 1, unit: "carton", unitPrice: 14000 },
-      onions: { required: 100, unit: "kg", unitPrice: 100 },
-      dhania: { required: 1, unit: "bun", unitPrice: 300 },
-      hoho: { required: 1, unit: "kg", unitPrice: 5000 },
-      cabbages: { required: 72, unit: "heads", unitPrice: 50 },
-      potatoes_irish: { required: 10, unit: "Debe", unitPrice: 900 },
-      fresh_ginger: { required: 5, unit: "kg", unitPrice: 350 },
-      fresh_garlic: { required: 5, unit: "kg", unitPrice: 400 },
-      carrots: { required: 20, unit: "kg", unitPrice: 150 },
-      green_peas: { required: 20, unit: "kgs", unitPrice: 250 },
-      kienyeji_mboga: { required: 1, unit: "Sack", unitPrice: 18000 },
-      lemons_and_chilies: { required: 1, unit: "pcs", unitPrice: 1500 },
-      sweet_potatoes: { required: 30, unit: "kgs", unitPrice: 60 },
-      nduma: { required: 20, unit: "kg", unitPrice: 100 },
-      charcoal_bags: { required: 2, unit: "bags", unitPrice: 3000 },
-      gas_cylinder: { required: 3, unit: "cylinder", unitPrice: 7500 },
-      mineral_water: { required: 42, unit: "Bale", unitPrice: 350 },
+      // --- A. Food Budget ---
+      milk: { required: 21, unit: "Cartons", unitPrice: 770 },
+      eggs: { required: 20, unit: "Trays", unitPrice: 450 },
+      butter_beans: { required: 13, unit: "Kgs", unitPrice: 200 },
+      yellow_beans: { required: 45, unit: "Kgs", unitPrice: 150 },
+      groundnuts: { required: 30, unit: "Kgs", unitPrice: 300 },
+      bread: { required: 32, unit: "Loaves", unitPrice: 100 },
+      cooking_oil: { required: 42, unit: "Liters", unitPrice: 278 },
+      sweet_potatoes: { required: 1, unit: "Lot", unitPrice: 4670 },
+      waru: { required: 1, unit: "Lot", unitPrice: 4670 },
+      ngano: { required: 30, unit: "Packets", unitPrice: 170 },
+      mandazi_flour: { required: 30, unit: "Packets", unitPrice: 157 },
+      nduma: { required: 1, unit: "Lot", unitPrice: 5600 },
+      rice: { required: 120, unit: "Kgs", unitPrice: 178 },
+      mala: { required: 93, unit: "Packets", unitPrice: 131 },
+      sugar: { required: 30, unit: "Kgs", unitPrice: 159 },
+      drinking_chocolate: { required: 1, unit: "Lot", unitPrice: 1870 },
+      wimbi_flour: { required: 15, unit: "Packets", unitPrice: 180 },
+      snacks: { required: 1, unit: "Lot", unitPrice: 11200 },
+      vegetables: { required: 1, unit: "Lot", unitPrice: 20670 },
+      cabbage: { required: 1, unit: "Lot", unitPrice: 5600 },
+      ingredients: { required: 1, unit: "Lot", unitPrice: 18110 },
+      kamande: { required: 21, unit: "Kgs", unitPrice: 196 },
+      fruits: { required: 1, unit: "Lot", unitPrice: 10270 },
 
-      // --- Accommodation Items ---
-      beds: { required: 59, unit: "pieces", unitPrice: 0 },
-      duvet_blankets: { required: 67, unit: "pieces", unitPrice: 0 },
-      mattresses: { required: 33, unit: "pieces", unitPrice: 0 },
+      // --- B. Literature Materials ---
+      steps_to_christ: { required: 120, unit: "Pcs", unitPrice: 100 },
+      nyimbo_za_kristo: { required: 120, unit: "Pcs", unitPrice: 500 },
+      bibles: { required: 50, unit: "Pcs", unitPrice: 1100 },
     };
 
-    const updates: Record<
+    // Create a brand new object mapping the exact structure we need
+    const newItems: Record<
       string,
       { required: number; unit: string; unitPrice: number; pledged: number }
     > = {};
     for (const [key, val] of Object.entries(pdfItems)) {
-      updates[`items/${key}`] = { ...val, pledged: 0 };
+      newItems[key] = { ...val, pledged: 0 };
     }
-    await update(ref(database), updates);
-    setMessage("✅ Camp Meeting 2026 budget data seeded!");
-    refresh();
+
+    try {
+      // USING SET() INSTEAD OF UPDATE() WILL COMPLETELY OVERWRITE AND REMOVE OLD DATA
+      await set(ref(database, "items"), newItems);
+      setMessage("✅ Khaoya Mission 2026 budget data seeded successfully! (Old data removed)");
+      refresh();
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to seed data.");
+    }
   };
 
   // Edit handlers
@@ -367,7 +339,7 @@ function AdminDashboard() {
     setShowAddConfirmModal(true);
   };
 
-  // Filter items based on search term – using correct type
+  // Filter items based on search term
   const getFilteredItems = (): ItemsMap => {
     if (!items) return {};
     if (!itemSearchTerm.trim()) return items;

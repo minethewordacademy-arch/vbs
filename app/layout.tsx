@@ -86,9 +86,39 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-screen flex flex-col bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-100 font-sans">
+        
+        {/* Simple Branding Header */}
+        <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm sticky top-0 z-50">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-center gap-2">
+            {/* Small Cross Icon for Church Identity */}
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 2h4v7h7v4h-7v9h-4v-9H3V9h7V2z" />
+            </svg>
+            <span className="font-bold text-lg tracking-wide text-gray-800 dark:text-gray-100">
+              Zimmerman SDA Church
+            </span>
+          </div>
+        </header>
+
+        {/* Main Content Area - flex-1 pushes footer down */}
+        <main className="flex-1 flex flex-col w-full">
+          {children}
+        </main>
+
+        {/* Footer */}
+        <footer className="py-6 mt-auto text-center border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            &copy; {new Date().getFullYear()} Zimmerman SDA Church. All rights reserved.
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Support our mission and community programs.
+          </p>
+        </footer>
+
+      </body>
     </html>
   );
 }

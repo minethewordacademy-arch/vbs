@@ -1,0 +1,8 @@
+{
+  "name": "Zimmerman Pledge Tracker",
+  "short_name": "Zimmerman Pledges",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
