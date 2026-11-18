@@ -109,36 +109,47 @@ function AdminDashboard() {
     setTimeout(() => setMessage(""), 2000);
   };
 
-  // Seed PDF data – perfectly matched to Khaoya Mission 2026
-  const seedFromPDF = async () => {
-    const pdfItems = {
-      milk: { required: 21, unit: "Cartons", unitPrice: 770 },
-      eggs: { required: 20, unit: "Trays", unitPrice: 450 },
-      butter_beans: { required: 13, unit: "Kgs", unitPrice: 200 },
-      yellow_beans: { required: 45, unit: "Kgs", unitPrice: 150 },
-      groundnuts: { required: 30, unit: "Kgs", unitPrice: 300 },
-      bread: { required: 32, unit: "Loaves", unitPrice: 100 },
-      cooking_oil: { required: 42, unit: "Liters", unitPrice: 278 },
-      sweet_potatoes: { required: 1, unit: "Lot", unitPrice: 4670 },
-      waru: { required: 1, unit: "Lot", unitPrice: 4670 },
-      ngano: { required: 30, unit: "Packets", unitPrice: 170 },
-      mandazi_flour: { required: 30, unit: "Packets", unitPrice: 157 },
-      nduma: { required: 1, unit: "Lot", unitPrice: 5600 },
-      rice: { required: 120, unit: "Kgs", unitPrice: 178 },
-      mala: { required: 93, unit: "Packets", unitPrice: 131 },
-      sugar: { required: 30, unit: "Kgs", unitPrice: 159 },
-      drinking_chocolate: { required: 1, unit: "Lot", unitPrice: 1870 },
-      wimbi_flour: { required: 15, unit: "Packets", unitPrice: 180 },
-      snacks: { required: 1, unit: "Lot", unitPrice: 11200 },
-      vegetables: { required: 1, unit: "Lot", unitPrice: 20670 },
-      cabbage: { required: 1, unit: "Lot", unitPrice: 5600 },
-      ingredients: { required: 1, unit: "Lot", unitPrice: 18110 },
-      kamande: { required: 21, unit: "Kgs", unitPrice: 196 },
-      fruits: { required: 1, unit: "Lot", unitPrice: 10270 },
-      steps_to_christ: { required: 120, unit: "Pcs", unitPrice: 100 },
-      nyimbo_za_kristo: { required: 120, unit: "Pcs", unitPrice: 500 },
-      bibles: { required: 50, unit: "Pcs", unitPrice: 1100 },
-    };
+  // Seed PDF data – matched to Zimmerman Pathfinder Camporee 2026
+const seedFromPDF = async () => {
+  const pdfItems = {
+    uji_flour_wimbi: { required: 30, unit: "Kgs", unitPrice: 250 },
+    milk: { required: 4, unit: "Crates", unitPrice: 6500 }, // Total: 26,000 KSH
+    rice: { required: 150, unit: "Kgs", unitPrice: 180 },
+    chapati_flour: { required: 50, unit: "Packets", unitPrice: 190 },
+    ugali_flour: { required: 10, unit: "Packets (100kg)", unitPrice: 1700 }, // Total: 17,000 KSH
+    beans: { required: 105, unit: "Kgs", unitPrice: 171 }, // Total: 18,000 KSH (@ 170/kg approx)
+    lentils_kamande: { required: 100, unit: "Kgs", unitPrice: 80 }, // Total: 8,000 KSH (100kg @ 80)
+    nderu: { required: 40, unit: "Kgs", unitPrice: 90 }, // Total: 3,600 KSH (40kg @ 90)
+    sosi_soya: { required: 1, unit: "Bulk", unitPrice: 4000 },
+    eggs: { required: 10, unit: "Crates", unitPrice: 1920 },
+    pasta: { required: 20, unit: "Kgs", unitPrice: 400 },
+    bread: { required: 280, unit: "Packets", unitPrice: 93 }, // Total: 26,000 KSH (~92.86 per packet)
+    sweet_potatoes: { required: 1, unit: "Sack", unitPrice: 5000 },
+    nduma: { required: 1, unit: "Sack", unitPrice: 6000 },
+    irish_potatoes: { required: 2, unit: "Sacks", unitPrice: 9000 },
+    green_maize: { required: 1, unit: "Sack", unitPrice: 2000 },
+    cabbage: { required: 1, unit: "Bulk", unitPrice: 2800 },
+    greens: { required: 8, unit: "Lots", unitPrice: 2000 },
+    mala: { required: 40, unit: "Packets", unitPrice: 100 },
+    fruits: { required: 4000, unit: "Pcs", unitPrice: 6.75 }, // Total: 27,000 KSH
+    mandazi_flour: { required: 36, unit: "Packets", unitPrice: 190 },
+    sugar: { required: 30, unit: "Kgs", unitPrice: 100 }, // Total: 3,000 KSH
+    chocolate: { required: 1, unit: "Bulk", unitPrice: 2000 },
+    soya: { required: 1, unit: "Bulk", unitPrice: 400 },
+    onions: { required: 4, unit: "Nets", unitPrice: 625 }, // Total: 2,500 KSH
+    tomatoes: { required: 2, unit: "Crates", unitPrice: 4830 }, // Total: 9,660 KSH
+    carrots: { required: 1, unit: "Bulk", unitPrice: 3000 },
+    garlic: { required: 1, unit: "Bulk", unitPrice: 4000 },
+    salt: { required: 1, unit: "Bulk", unitPrice: 1000 },
+    french_beans: { required: 1, unit: "Bulk", unitPrice: 2000 },
+    cooking_oil: { required: 60, unit: "Liters", unitPrice: 250 }, // Total: 15,000 KSH
+    charcoal: { required: 2, unit: "Sacks", unitPrice: 5000 }, // Total: 10,000 KSH
+    gas: { required: 4, unit: "Mekos", unitPrice: 1750 }, // Total: 7,000 KSH
+    jiko: { required: 1, unit: "Bulk", unitPrice: 8000 },
+    soap_and_detergents: { required: 1, unit: "Bulk", unitPrice: 4000 },
+    drinking_water: { required: 35, unit: "Crates", unitPrice: 200 },
+    soda_drinks: { required: 100, unit: "Pcs", unitPrice: 100 },
+  };
 
     const newItems: Record<
       string,
@@ -150,7 +161,7 @@ function AdminDashboard() {
 
     try {
       await set(ref(database, "items"), newItems);
-      setMessage("✅ Khaoya Mission 2026 budget data seeded successfully! (Old data removed)");
+      setMessage("✅ Camporee 2026 budget data seeded successfully! (Old data removed)");
       refresh();
     } catch (error) {
       console.error(error);

@@ -114,7 +114,7 @@ export default async function HomePage({
             </span>
             <span className="hidden sm:inline text-gray-400 dark:text-gray-600">|</span>
             <span>
-              Account: <strong className="text-blue-700 dark:text-blue-400 text-lg font-bold tracking-wide">Mission2026</strong>
+              Account: <strong className="text-blue-700 dark:text-blue-400 text-lg font-bold tracking-wide">Camporee</strong>
             </span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
